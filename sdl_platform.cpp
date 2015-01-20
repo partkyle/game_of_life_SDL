@@ -1,14 +1,13 @@
 #include <iostream>
 
-#include <SDL2/SDL.h>
-
 // TODO(partkyle): make this platform independent
 #include <sys/mman.h>
 #define MAP_ANONYMOUS MAP_ANON
-
+#include <dlfcn.h>
 
 #include "types.h"
 #include "sdl_platform.h"
+
 
 internal bool32
 handle_event(SDL_Event *event)
@@ -31,8 +30,8 @@ SDL_update_window(SDL_Window *_, SDL_Renderer *renderer, sdl_offscreen_buffer *b
 {
     SDL_UpdateTexture(buffer->texture,
                       0,
-                      buffer->memory,
-                      buffer->pitch);
+                      buffer->game_buffer->memory,
+                      buffer->game_buffer->pitch);
 
     SDL_RenderCopy(renderer,
                    buffer->texture,
@@ -63,10 +62,10 @@ internal void
 SDL_resize_texture(sdl_offscreen_buffer *buffer, SDL_Renderer *renderer, int32 width, int32 height)
 {
     int bytes_per_pixel = 4;
-    if (buffer->memory)
+    if (buffer->game_buffer->memory)
     {
-        munmap(buffer->memory,
-               buffer->width * buffer->height * bytes_per_pixel);
+        munmap(buffer->game_buffer->memory,
+               buffer->game_buffer->width * buffer->game_buffer->height * bytes_per_pixel);
     }
     if (buffer->texture)
     {
@@ -77,10 +76,10 @@ SDL_resize_texture(sdl_offscreen_buffer *buffer, SDL_Renderer *renderer, int32 w
                                         SDL_TEXTUREACCESS_STREAMING,
                                         width,
                                         height);
-    buffer->width = width;
-    buffer->height = height;
-    buffer->pitch = width * bytes_per_pixel;
-    buffer->memory = mmap(0,
+    buffer->game_buffer->width = width;
+    buffer->game_buffer->height = height;
+    buffer->game_buffer->pitch = width * bytes_per_pixel;
+    buffer->game_buffer->memory = mmap(0,
                           width * height * bytes_per_pixel,
                           PROT_READ | PROT_WRITE,
                           MAP_PRIVATE | MAP_ANONYMOUS,
@@ -98,41 +97,34 @@ SDL_get_window_dimension(SDL_Window *Window)
     return(result);
 }
 
-internal void
-RenderWeirdGradient(sdl_offscreen_buffer *buffer, int blueoffset, int greenoffset)
+internal game_code
+SDL_load_game_code(char *filename)
 {
-    // todo(casey): let's see what the optimizer does
+  game_code code = {};
+  // TODO(partkyle): make this path relative
+  code.game_code_dll = dlopen(filename, RTLD_LAZY|RTLD_GLOBAL);
+  if(code.game_code_dll)
+  {
+    // TODO(partkyle): make the reload work
+    code.update_and_render = (game_update_and_render *) dlsym(code.game_code_dll, "GameUpdateAndRender");
+  }
 
-    uint8 *row = (uint8 *)buffer->memory;
-    for(int y = 0;
-        y < buffer->height;
-        ++y)
-    {
-        uint32 *pixel = (uint32 *)row;
-        for(int x = 0;
-            x < buffer->width;
-            ++x)
-        {
-            uint8 blue = (uint8)(x + blueoffset);
-            uint8 green = (uint8)(y + greenoffset);
-
-            *pixel++ = ((green << 8) | blue);
-        }
-
-        row += buffer->pitch;
-    }
+  return code;
 }
 
-int
-game_update_and_render(sdl_offscreen_buffer *buffer)
+internal void
+SDL_unload_game_code(game_code *code)
 {
-  RenderWeirdGradient(buffer, 100, 0);
-
-  return(0);
+  if (code->game_code_dll)
+  {
+    dlclose(code->game_code_dll);
+    code->game_code_dll = 0;
+    code->update_and_render = 0;
+  }
 }
 
 int32
-main(int32 argc, char * arg[])
+main(int32 argc, char *arg[])
 {
     // init SDL
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0)
@@ -157,7 +149,13 @@ main(int32 argc, char * arg[])
                                                   -1,
                                                   SDL_RENDERER_PRESENTVSYNC);
 
-      sdl_offscreen_buffer buffer;
+      sdl_offscreen_buffer buffer = {};
+
+      game_offscreen_buffer game_buffer = {};
+      buffer.game_buffer = &game_buffer;
+
+      char *code_filename = "/Users/partkyle/sdl/build/sdl_platform.app/Contents/MacOS/game.so";
+      game_code code = SDL_load_game_code(code_filename);
 
       if(renderer)
       {
@@ -169,7 +167,13 @@ main(int32 argc, char * arg[])
         {
           Running = SDL_process_pending_messages();
 
-          game_update_and_render(&buffer);
+          SDL_unload_game_code(&code);
+          code = SDL_load_game_code(code_filename);
+
+          if(code.update_and_render)
+          {
+            code.update_and_render(buffer.game_buffer);
+          }
 
           SDL_update_window(window, renderer, &buffer);
         }
