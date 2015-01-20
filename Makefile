@@ -1,6 +1,6 @@
 .PHONY: run
 
-default: run
+default: build
 
 run: build/sdl_platform.app
 	open build/sdl_platform.app

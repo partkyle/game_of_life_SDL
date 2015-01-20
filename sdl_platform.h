@@ -6,13 +6,19 @@
 struct sdl_offscreen_buffer
 {
     // NOTE(casey): Pixels are alwasy 32-bits wide, Memory Order BB GG RR XX
-    SDL_Texture *Texture;
+    SDL_Texture *texture;
 
-    void *Memory;
+    void *memory;
 
-    int32 Width;
-    int32 Height;
-    int32 Pitch;
+    int32 width;
+    int32 height;
+    int32 pitch;
+};
+
+struct sdl_window_dimension
+{
+  int32 width;
+  int32 height;
 };
 
 #endif
