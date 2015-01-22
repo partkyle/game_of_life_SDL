@@ -154,7 +154,7 @@ main(int32 argc, char *arg[])
       game_offscreen_buffer game_buffer = {};
       buffer.game_buffer = &game_buffer;
 
-      char *code_filename = "/Users/partkyle/sdl/build/sdl_platform.app/Contents/MacOS/game.so";
+      char *code_filename = "/Users/partkyle/sdl/build/game.so";
       game_code code = SDL_load_game_code(code_filename);
 
       if(renderer)
