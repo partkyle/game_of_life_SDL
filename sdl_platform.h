@@ -1,7 +1,7 @@
 #ifndef SDL_EXAMPLE_H
 #define SDL_EXAMPLE_H
 
-#include <SDL2/SDL.h>
+#include "SDL.h"
 #include "types.h"
 #include "game.h"
 

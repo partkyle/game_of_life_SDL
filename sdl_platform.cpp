@@ -1,10 +1,16 @@
 #include <iostream>
 
 // TODO(partkyle): make this platform independent
-#include <sys/mman.h>
-#define MAP_ANONYMOUS MAP_ANON
-#include <dlfcn.h>
 
+#ifdef OSX
+  #include <sys/mman.h>
+  #define MAP_ANONYMOUS MAP_ANON
+  #include <dlfcn.h>
+#endif
+
+#ifdef WINDOWS
+#endif
+#include "windows.h"
 #include "types.h"
 #include "sdl_platform.h"
 
@@ -64,8 +70,7 @@ SDL_resize_texture(sdl_offscreen_buffer *buffer, SDL_Renderer *renderer, int32 w
     int bytes_per_pixel = 4;
     if (buffer->game_buffer->memory)
     {
-        munmap(buffer->game_buffer->memory,
-               buffer->game_buffer->width * buffer->game_buffer->height * bytes_per_pixel);
+        free(buffer->game_buffer->memory);
     }
     if (buffer->texture)
     {
@@ -79,12 +84,13 @@ SDL_resize_texture(sdl_offscreen_buffer *buffer, SDL_Renderer *renderer, int32 w
     buffer->game_buffer->width = width;
     buffer->game_buffer->height = height;
     buffer->game_buffer->pitch = width * bytes_per_pixel;
-    buffer->game_buffer->memory = mmap(0,
-                          width * height * bytes_per_pixel,
-                          PROT_READ | PROT_WRITE,
-                          MAP_PRIVATE | MAP_ANONYMOUS,
-                          -1,
-                          0);
+    buffer->game_buffer->memory = malloc(
+                          width * height * bytes_per_pixel
+                          // PROT_READ | PROT_WRITE,
+                          // MAP_PRIVATE | MAP_ANONYMOUS,
+                          // -1,
+                          // 0);
+                          );
 }
 
 sdl_window_dimension
@@ -101,12 +107,26 @@ internal game_code
 SDL_load_game_code(char *filename)
 {
   game_code code = {};
+
+#if OSX
   // TODO(partkyle): make this path relative
   code.game_code_dll = dlopen(filename, RTLD_LAZY|RTLD_GLOBAL);
   if(code.game_code_dll)
   {
     // TODO(partkyle): make the reload work
     code.update_and_render = (game_update_and_render *) dlsym(code.game_code_dll, "GameUpdateAndRender");
+  }
+#endif
+  WIN32_FILE_ATTRIBUTE_DATA Ignored;
+  if(!GetFileAttributesEx("w:\\sdl_platform\\build\\gamedll.lock", GetFileExInfoStandard, &Ignored))
+  {
+    CopyFile("w:\\sdl_platform\\build\\game.dll", "w:\\sdl_platform\\build\\game_running.dll", FALSE);
+    code.game_code_dll = LoadLibraryA("w:\\sdl_platform\\build\\game_running.dll");
+    if(code.game_code_dll)
+    {
+      code.update_and_render = (game_update_and_render *)
+          GetProcAddress((HMODULE)code.game_code_dll, "GameUpdateAndRender");
+    }
   }
 
   return code;
@@ -115,16 +135,26 @@ SDL_load_game_code(char *filename)
 internal void
 SDL_unload_game_code(game_code *code)
 {
+#if OSX
   if (code->game_code_dll)
   {
     dlclose(code->game_code_dll);
     code->game_code_dll = 0;
     code->update_and_render = 0;
   }
+#endif
+
+  if (code->game_code_dll)
+  {
+    FreeLibrary((HMODULE)code->game_code_dll);
+    code->game_code_dll = 0;
+    code->game_code_dll = 0;
+    code->update_and_render = 0;
+  }
 }
 
-int32
-main(int32 argc, char *arg[])
+int
+main(int argc, char *arg[])
 {
     // init SDL
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0)
@@ -179,6 +209,6 @@ main(int32 argc, char *arg[])
         }
       }
     }
-    // clean up
+
     return 0;
 }
