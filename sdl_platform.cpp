@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "platform.cpp"
 
 #include "types.h"
@@ -14,7 +12,6 @@ handle_event(SDL_Event *event)
     {
         case SDL_QUIT:
         {
-            printf("SDL_QUIT\n");
             should_quit = true;
         } break;
 
@@ -112,8 +109,6 @@ main(int argc, char *arg[])
     // init SDL
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
-        std::cout << "ERROR SDL_Init" << std::endl;
-
         return -1;
     }
 

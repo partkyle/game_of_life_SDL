@@ -3,6 +3,8 @@
 #ifdef __APPLE__
   #include <sys/mman.h>
   #define MAP_ANONYMOUS MAP_ANON
+
+  // dynamic loading
   #include <dlfcn.h>
 
   internal void
