@@ -1,7 +1,5 @@
 #include <iostream>
 
-// TODO(partkyle): make this platform independent
-
 #include "platform.cpp"
 
 #include "types.h"
