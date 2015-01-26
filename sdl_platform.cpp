@@ -2,15 +2,8 @@
 
 // TODO(partkyle): make this platform independent
 
-#ifdef OSX
-  #include <sys/mman.h>
-  #define MAP_ANONYMOUS MAP_ANON
-  #include <dlfcn.h>
-#endif
+#include "platform.cpp"
 
-#ifdef WINDOWS
-#endif
-#include "windows.h"
 #include "types.h"
 #include "sdl_platform.h"
 
@@ -106,51 +99,13 @@ SDL_get_window_dimension(SDL_Window *Window)
 internal game_code
 SDL_load_game_code(char *filename)
 {
-  game_code code = {};
-
-#if OSX
-  // TODO(partkyle): make this path relative
-  code.game_code_dll = dlopen(filename, RTLD_LAZY|RTLD_GLOBAL);
-  if(code.game_code_dll)
-  {
-    // TODO(partkyle): make the reload work
-    code.update_and_render = (game_update_and_render *) dlsym(code.game_code_dll, "GameUpdateAndRender");
-  }
-#endif
-  WIN32_FILE_ATTRIBUTE_DATA Ignored;
-  if(!GetFileAttributesEx("w:\\sdl_platform\\build\\gamedll.lock", GetFileExInfoStandard, &Ignored))
-  {
-    CopyFile("w:\\sdl_platform\\build\\game.dll", "w:\\sdl_platform\\build\\game_running.dll", FALSE);
-    code.game_code_dll = LoadLibraryA("w:\\sdl_platform\\build\\game_running.dll");
-    if(code.game_code_dll)
-    {
-      code.update_and_render = (game_update_and_render *)
-          GetProcAddress((HMODULE)code.game_code_dll, "GameUpdateAndRender");
-    }
-  }
-
-  return code;
+  return platform_load_game_code(filename);
 }
 
 internal void
 SDL_unload_game_code(game_code *code)
 {
-#if OSX
-  if (code->game_code_dll)
-  {
-    dlclose(code->game_code_dll);
-    code->game_code_dll = 0;
-    code->update_and_render = 0;
-  }
-#endif
-
-  if (code->game_code_dll)
-  {
-    FreeLibrary((HMODULE)code->game_code_dll);
-    code->game_code_dll = 0;
-    code->game_code_dll = 0;
-    code->update_and_render = 0;
-  }
+  platform_unload_game_code(code);
 }
 
 int
