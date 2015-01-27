@@ -10,7 +10,7 @@
 
 #define array_count(array) (sizeof(array) / sizeof((array)[0]))
 
-#define assert(expression) if(!(expression)) {*(int *)0 = 0;}
+#define assert(expression) if(!(expression)) {*(volatile int *)0 = 0;}
 
 
 typedef struct game_offscreen_buffer

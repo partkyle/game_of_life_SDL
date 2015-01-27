@@ -23,63 +23,53 @@
     }
   }
 
-  internal void
-  osx_relative_path(char *buffer, uint32 size, char *endfile)
+  internal platform_dynamic_game
+  platform_dynamic_game_load(char *dll_filename)
   {
-    // TODO(partkyle) is this the only way to do this?
-    _NSGetExecutablePath(buffer, &size);
+    platform_dynamic_game game = {};
 
+    char module_filename[MAX_PATH_LENGTH];
+    uint32 size = MAX_PATH_LENGTH;
+    _NSGetExecutablePath(module_filename, &size);
+
+    strcpy(game.dll_filename, module_filename);
     // find one index past the last slash
-    char *last_slash = strrchr(buffer, '/');
+    char *last_slash = strrchr(game.dll_filename, '/');
     ++last_slash;
 
     // add the filename from the slash
-    strcpy(last_slash, endfile);
+    strcpy(last_slash, dll_filename);
+
+    strcat(game.dll_filename, ".so");
+
+    strcpy(game.lock_filename, game.dll_filename);
+    strcat(game.lock_filename, ".lock");
+
+    return(game);
   }
 
-  #define MAX_PATH 1024
-
-  internal game_code
-  platform_load_game_code(char *filename)
+  internal void
+  platform_load_game_code(platform_dynamic_game *game, game_code *code)
   {
-    game_code code = {};
-
-    // TODO(partkyle): make this less of a hack
-    // relative path lookup
-    char dylib_filename[MAX_PATH];
-    uint32 size = MAX_PATH;
-
-    char fileend[10];
-    strcpy(fileend, filename);
-    strcat(fileend, ".so");
-
-    osx_relative_path(dylib_filename, MAX_PATH, fileend);
-
-    char lockfile[MAX_PATH];
-    strcpy(lockfile, dylib_filename);
-    strcat(lockfile, ".lock");
-
-
     // don't load if the lockfile exists
     struct stat ignored;
-    if(stat(lockfile, &ignored) < 0)
+    if(stat(game->lock_filename, &ignored) < 0)
     {
       struct stat dllstat;
-      if(stat(dylib_filename, &dllstat) >= 0)
+      if(stat(game->dll_filename, &dllstat) >= 0)
       {
-        if(code.DLL_last_write_time < dllstat.st_mtime)
+        if(code->DLL_last_write_time < dllstat.st_mtime)
         {
-          code.DLL_last_write_time = dllstat.st_mtime;
-          code.game_code_dll = dlopen(dylib_filename, RTLD_LAZY|RTLD_GLOBAL);
-          if(code.game_code_dll)
+          platform_unload_game_code(code);
+          code->DLL_last_write_time = dllstat.st_mtime;
+          code->game_code_dll = dlopen(game->dll_filename, RTLD_LAZY|RTLD_GLOBAL);
+          if(code->game_code_dll)
           {
-            code.update_and_render = (game_update_and_render *) dlsym(code.game_code_dll, "GameUpdateAndRender");
+            code->update_and_render = (game_update_and_render *) dlsym(code->game_code_dll, "GameUpdateAndRender");
           }
         }
       }
     }
-
-    return code;
   }
 #endif
 
