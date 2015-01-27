@@ -178,9 +178,9 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             }
 
             draw_rectangle(buffer,
-                          (x*cell_width)+(cell_width*0.45f), (y*cell_height)+(cell_height*0.5f),
-                          1, 1,
-                          r, g, b);
+                           (x*cell_width)+(cell_width*0.45f), (y*cell_height)+(cell_height*0.5f),
+                           1, 1,
+                           r, g, b);
         }
     }
 
