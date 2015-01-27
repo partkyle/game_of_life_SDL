@@ -166,9 +166,9 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
             if(cell)
             {
-                r = 0.5f;
+                r = 1.0f - (real32)state->framerate / (real32)MAX_FRAMERATE;
                 g = 0.5f;
-                b = 0.5f;
+                b = (real32)state->framerate / (real32)MAX_FRAMERATE;
             }
 
             if(mouse_x == x && mouse_y == y)
