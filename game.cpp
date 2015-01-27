@@ -92,8 +92,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     initialize_arena(&state->arena, memory->permanent_storage_size - sizeof(game_state),
                      (uint8 *)memory->permanent_storage + sizeof(game_state));
 
-    state->rows = 9*10;
-    state->cols = 16*10;
+    state->rows = 9*5;
+    state->cols = 16*5;
 
     state->current_generation = push_array(&state->arena, state->rows * state->cols, int32);
     state->prev_generation = push_array(&state->arena, state->rows * state->cols, int32);
@@ -161,6 +161,19 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
           draw_rectangle(buffer,
                          x*cell_width, y*cell_height,
                          cell_width, cell_height,
+                         r, g, b);
+
+          int32 prev_cell = get_board_value(state->prev_generation, state->rows, state->cols, x, y);
+          if(prev_cell)
+          {
+            r = 1.0f;
+            g = 1.0f;
+            b = 1.0f;
+          }
+
+          draw_rectangle(buffer,
+                         (x*cell_width)+(cell_width*0.45f), (y*cell_height)+(cell_height*0.5f),
+                         1, 1,
                          r, g, b);
       }
   }
