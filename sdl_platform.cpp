@@ -215,6 +215,7 @@ main(int argc, char *arg[])
                 current_input->rel_mouse_y = last_input->mouse_y;
                 SDL_GetRelativeMouseState(&current_input->rel_mouse_x, &current_input->rel_mouse_y);
 
+                // TODO(partkyle): add other mouse buttons
                 current_input->mouse_buttons[0].ended_down = (mouse_buttons & SDL_BUTTON(SDL_BUTTON_LEFT));
 
                 Running = SDL_process_pending_messages(current_input);
