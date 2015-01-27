@@ -100,7 +100,6 @@ SDL_process_pending_messages(game_input *input)
 internal void
 SDL_resize_texture(sdl_offscreen_buffer *buffer, SDL_Renderer *renderer, int32 width, int32 height)
 {
-    int bytes_per_pixel = 4;
     if (buffer->game_buffer->memory)
     {
         free(buffer->game_buffer->memory);
@@ -114,11 +113,12 @@ SDL_resize_texture(sdl_offscreen_buffer *buffer, SDL_Renderer *renderer, int32 w
                                         SDL_TEXTUREACCESS_STREAMING,
                                         width,
                                         height);
+    buffer->game_buffer->bytes_per_pixel = 4;
     buffer->game_buffer->width = width;
     buffer->game_buffer->height = height;
-    buffer->game_buffer->pitch = width * bytes_per_pixel;
+    buffer->game_buffer->pitch = width * buffer->game_buffer->bytes_per_pixel;
     buffer->game_buffer->memory = malloc(
-                          width * height * bytes_per_pixel
+                          width * height * buffer->game_buffer->bytes_per_pixel
                           // PROT_READ | PROT_WRITE,
                           // MAP_PRIVATE | MAP_ANONYMOUS,
                           // -1,
@@ -186,7 +186,10 @@ main(int argc, char *arg[])
         sdl_window_dimension dimension = SDL_get_window_dimension(window);
         SDL_resize_texture(&buffer, renderer, dimension.width, dimension.height);
 
-        game_input input = {};
+        game_input input[2] = {};
+
+        game_input *current_input = &input[0];
+        game_input *last_input = &input[1];
 
         game_memory memory = {};
         memory.permanent_storage_size = 64 * 1024 * 1024;
@@ -199,17 +202,33 @@ main(int argc, char *arg[])
 
         while(Running)
         {
-          Running = SDL_process_pending_messages(&input);
+          // clear out mouse input
+
+          SDL_GetMouseState(&current_input->mouse_x, &current_input->mouse_y);
+
+          // SDL_GetRelativeMouseState requires the last known position of x and y
+          current_input->rel_mouse_x = last_input->mouse_x;
+          current_input->rel_mouse_y = last_input->mouse_y;
+
+          SDL_GetRelativeMouseState(&current_input->rel_mouse_x, &current_input->rel_mouse_y);
+
+          Running = SDL_process_pending_messages(current_input);
 
           SDL_unload_game_code(&code);
           code = SDL_load_game_code(code_filename);
 
           if(code.update_and_render)
           {
-            code.update_and_render(buffer.game_buffer, &memory, &input);
+            code.update_and_render(buffer.game_buffer, &memory, current_input);
           }
 
           SDL_update_window(window, renderer, &buffer);
+
+          {
+            game_input *tmp = current_input;
+            current_input = last_input;
+            last_input = current_input;
+          }
         }
       }
     }
