@@ -120,11 +120,11 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     // debug rectangle
     draw_rectangle(buffer, 0, 0, buffer->width, buffer->height, 1.0f, 0.0f, 1.0f);
 
+    int32 mouse_x = (int32)(input->mouse_x / cell_width);
+    int32 mouse_y = (int32)(input->mouse_y / cell_height);
+
     if(input->mouse_buttons[0].ended_down)
     {
-        int32 mouse_x = (int32)(input->mouse_x / cell_width);
-        int32 mouse_y = (int32)(input->mouse_y / cell_height);
-
         set_board_value(state->current_generation, state->rows, state->cols,
         mouse_x, mouse_y, 1);
     }
@@ -153,6 +153,13 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                 r = 0.5f;
                 g = 0.5f;
                 b = 0.5f;
+            }
+
+            if(mouse_x == x && mouse_y == y)
+            {
+                r = 0.5f;
+                g = 0.5f;
+                b = 0.1f;
             }
 
             draw_rectangle(buffer,
