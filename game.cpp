@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include "game_of_life.cpp"
 
+#define MIN_FRAMERATE 0
+#define MAX_FRAMERATE 30
+
 typedef struct game_state
 {
     memory_arena arena;
@@ -12,7 +15,8 @@ typedef struct game_state
     int32 rows;
     int32 cols;
 
-    uint32 framecount;
+    int32 framecount;
+    int32 framerate;
 } game_state;
 
 internal uint32
@@ -112,6 +116,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         state->current_generation[7*state->cols + 12] = 1;
 
         state->framecount = 0;
+        state->framerate = 5;
     }
 
     real32 cell_width = (real32)buffer->width / (real32)state->cols;
@@ -129,7 +134,18 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         mouse_x, mouse_y, 1);
     }
 
-    if(++state->framecount > 5)
+    // update framerate from the mouse wheel
+    state->framerate -= input->mouse_z;
+    if(state->framerate < MIN_FRAMERATE)
+    {
+        state->framerate = MIN_FRAMERATE;
+    }
+    if(state->framerate > MAX_FRAMERATE)
+    {
+        state->framerate = MAX_FRAMERATE;
+    }
+
+    if(++state->framecount > state->framerate)
     {
         state->framecount = 0;
 

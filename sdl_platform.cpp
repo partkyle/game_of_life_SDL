@@ -60,6 +60,11 @@ handle_event(SDL_Event *event, game_input *input)
         {
             SDL_process_keyboard_message(event->key.keysym, &input->controllers[0], false);
         } break;
+
+        case SDL_MOUSEWHEEL:
+        {
+            input->mouse_z += event->wheel.y;
+        } break;
     }
     return(should_quit);
 }
@@ -209,6 +214,7 @@ main(int argc, char *arg[])
 
                 // clear out mouse input
                 int32 mouse_buttons = SDL_GetMouseState(&current_input->mouse_x, &current_input->mouse_y);
+                current_input->mouse_z = 0;
 
                 // SDL_GetRelativeMouseState requires the last known position of x and y
                 current_input->rel_mouse_x = last_input->mouse_x;
