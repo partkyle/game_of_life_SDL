@@ -8,6 +8,9 @@
   #include <dlfcn.h>
   #include <mach-o/dyld.h>
   #include <strings.h>
+  #include <sys/stat.h>
+  #include <errno.h>
+  #include <stdio.h>
 
   internal void
   platform_unload_game_code(game_code *code)
@@ -20,16 +23,9 @@
     }
   }
 
-  internal game_code
-  platform_load_game_code(char *filename)
+  internal void
+  osx_relative_path(char *buffer, uint32 size, char *endfile)
   {
-    game_code code = {};
-
-    // TODO(partkyle): make this less of a hack
-    // relative path lookup
-    char buffer[256];
-    uint32 size = 256;
-
     // TODO(partkyle) is this the only way to do this?
     _NSGetExecutablePath(buffer, &size);
 
@@ -38,17 +34,49 @@
     ++last_slash;
 
     // add the filename from the slash
-    strcpy(last_slash, filename);
+    strcpy(last_slash, endfile);
+  }
 
-    // add .so on this platform
-    strcat(buffer, ".so");
+  #define MAX_PATH 1024
 
-    // TODO(partkyle): make this path relative
-    code.game_code_dll = dlopen(buffer, RTLD_LAZY|RTLD_GLOBAL);
-    if(code.game_code_dll)
+  internal game_code
+  platform_load_game_code(char *filename)
+  {
+    game_code code = {};
+
+    // TODO(partkyle): make this less of a hack
+    // relative path lookup
+    char dylib_filename[MAX_PATH];
+    uint32 size = MAX_PATH;
+
+    char fileend[10];
+    strcpy(fileend, filename);
+    strcat(fileend, ".so");
+
+    osx_relative_path(dylib_filename, MAX_PATH, fileend);
+
+    char lockfile[MAX_PATH];
+    strcpy(lockfile, dylib_filename);
+    strcat(lockfile, ".lock");
+
+
+    // don't load if the lockfile exists
+    struct stat ignored;
+    if(stat(lockfile, &ignored) < 0)
     {
-      // TODO(partkyle): make the reload work
-      code.update_and_render = (game_update_and_render *) dlsym(code.game_code_dll, "GameUpdateAndRender");
+      struct stat dllstat;
+      if(stat(dylib_filename, &dllstat) >= 0)
+      {
+        if(code.DLL_last_write_time < dllstat.st_mtime)
+        {
+          code.DLL_last_write_time = dllstat.st_mtime;
+          code.game_code_dll = dlopen(dylib_filename, RTLD_LAZY|RTLD_GLOBAL);
+          if(code.game_code_dll)
+          {
+            code.update_and_render = (game_update_and_render *) dlsym(code.game_code_dll, "GameUpdateAndRender");
+          }
+        }
+      }
     }
 
     return code;

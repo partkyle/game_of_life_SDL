@@ -87,7 +87,7 @@ typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
 typedef struct game_code
 {
   void* game_code_dll;
-  int64 DLL_last_write_time;
+  uint64 DLL_last_write_time;
 
     // IMPORTANT(casey): Either of the callbacks can be 0!  You must
     // check before calling.
