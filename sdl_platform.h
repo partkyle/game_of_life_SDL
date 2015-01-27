@@ -6,19 +6,19 @@
 #include "game.h"
 
 // TODO(partkyle): handle game.h import here
-struct sdl_offscreen_buffer
+typedef struct sdl_offscreen_buffer
 {
     // NOTE(casey): Pixels are alwasy 32-bits wide, Memory Order BB GG RR XX
     SDL_Texture *texture;
 
     game_offscreen_buffer *game_buffer;
-};
+} sdl_offscreen_buffer;
 
-struct sdl_window_dimension
+typedef struct sdl_window_dimension
 {
-  int32 width;
-  int32 height;
-};
+    int32 width;
+    int32 height;
+} sdl_window_dimension;
 
 typedef struct platform_dynamic_game
 {
