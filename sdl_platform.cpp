@@ -6,11 +6,11 @@
 internal void
 SDL_process_keyboard_control(game_button_state *new_state, bool32 is_down)
 {
-  if(new_state->ended_down != is_down)
-  {
-      new_state->ended_down = is_down;
-      ++new_state->half_transition_count;
-  }
+    if(new_state->ended_down != is_down)
+    {
+        new_state->ended_down = is_down;
+        ++new_state->half_transition_count;
+    }
 }
 
 internal void
@@ -139,13 +139,13 @@ SDL_get_window_dimension(SDL_Window *Window)
 internal platform_dynamic_game
 SDL_dynamic_platform_game(char *dll_filename)
 {
-  return platform_dynamic_game_load(dll_filename);
+      return platform_dynamic_game_load(dll_filename);
 }
 
 internal void
 SDL_load_game_code(platform_dynamic_game *game, game_code *code)
 {
-  platform_load_game_code(game, code);
+      platform_load_game_code(game, code);
 }
 
 int
@@ -158,77 +158,76 @@ main(int argc, char *arg[])
     }
 
     // create a window
-    SDL_Window *window = SDL_CreateWindow("@partkyle SDL Platform",             // window title
+    SDL_Window *window = SDL_CreateWindow("@partkyle SDL Platform",   // window title
                                           SDL_WINDOWPOS_CENTERED,     // x position, centered
                                           SDL_WINDOWPOS_CENTERED,     // y position, centered
-                                          1920 / 2,                        // width, in pixels
-                                          1080 / 2,                        // height, in pixels
+                                          1920 / 2,                   // width, in pixels
+                                          1080 / 2,                   // height, in pixels
                                           SDL_WINDOW_OPENGL           // flags
                                           );
 
     if(window)
     {
-      SDL_Renderer *renderer = SDL_CreateRenderer(window,
-                                                  -1,
-                                                  SDL_RENDERER_PRESENTVSYNC);
+        SDL_Renderer *renderer = SDL_CreateRenderer(window,
+                                                    -1,
+                                                    SDL_RENDERER_PRESENTVSYNC);
 
-      sdl_offscreen_buffer buffer = {};
+        sdl_offscreen_buffer buffer = {};
 
-      game_offscreen_buffer game_buffer = {};
-      buffer.game_buffer = &game_buffer;
+        game_offscreen_buffer game_buffer = {};
+        buffer.game_buffer = &game_buffer;
 
-      char *code_filename = "game";
-      platform_dynamic_game dynamic_game = SDL_dynamic_platform_game(code_filename);
-      game_code code = {};
-      SDL_load_game_code(&dynamic_game, &code);
+        char *code_filename = "game";
+        platform_dynamic_game dynamic_game = SDL_dynamic_platform_game(code_filename);
+        game_code code = {};
+        SDL_load_game_code(&dynamic_game, &code);
 
-      if(renderer)
-      {
-        bool32 Running = true;
-        sdl_window_dimension dimension = SDL_get_window_dimension(window);
-        SDL_resize_texture(&buffer, renderer, dimension.width, dimension.height);
-
-        game_input input[2] = {};
-
-        game_input *current_input = &input[0];
-        game_input *last_input = &input[1];
-
-        game_memory memory = {};
-        memory.permanent_storage_size = MB(64);
-        memory.transient_storage_size = GB(1);
-        void *memory_block = malloc(memory.permanent_storage_size + memory.transient_storage_size);
-
-        memory.permanent_storage = memory_block;
-        memory.transient_storage = ((uint8 *)memory.permanent_storage +
-                                           memory.permanent_storage_size);
-
-        while(Running)
+        if(renderer)
         {
-          // clear out mouse input
+            bool32 Running = true;
+            sdl_window_dimension dimension = SDL_get_window_dimension(window);
+            SDL_resize_texture(&buffer, renderer, dimension.width, dimension.height);
 
-          int32 mouse_buttons = SDL_GetMouseState(&current_input->mouse_x, &current_input->mouse_y);
+            game_input input[2] = {};
 
-          // SDL_GetRelativeMouseState requires the last known position of x and y
-          current_input->rel_mouse_x = last_input->mouse_x;
-          current_input->rel_mouse_y = last_input->mouse_y;
-          SDL_GetRelativeMouseState(&current_input->rel_mouse_x, &current_input->rel_mouse_y);
+            game_input *current_input = &input[0];
+            game_input *last_input = &input[1];
 
-          current_input->mouse_buttons[0].ended_down = (mouse_buttons & SDL_BUTTON(SDL_BUTTON_LEFT));
+            game_memory memory = {};
+            memory.permanent_storage_size = MB(64);
+            memory.transient_storage_size = GB(1);
+            void *memory_block = malloc(memory.permanent_storage_size + memory.transient_storage_size);
 
-          Running = SDL_process_pending_messages(current_input);
+            memory.permanent_storage = memory_block;
+            memory.transient_storage = ((uint8 *)memory.permanent_storage +
+                                        memory.permanent_storage_size);
 
-          SDL_load_game_code(&dynamic_game, &code);
+            while(Running)
+            {
+                // clear out mouse input
+                int32 mouse_buttons = SDL_GetMouseState(&current_input->mouse_x, &current_input->mouse_y);
 
-          if(code.update_and_render)
-          {
-            code.update_and_render(buffer.game_buffer, &memory, current_input);
-          }
+                // SDL_GetRelativeMouseState requires the last known position of x and y
+                current_input->rel_mouse_x = last_input->mouse_x;
+                current_input->rel_mouse_y = last_input->mouse_y;
+                SDL_GetRelativeMouseState(&current_input->rel_mouse_x, &current_input->rel_mouse_y);
 
-          SDL_update_window(window, renderer, &buffer);
+                current_input->mouse_buttons[0].ended_down = (mouse_buttons & SDL_BUTTON(SDL_BUTTON_LEFT));
 
-          swap(current_input, last_input);
+                Running = SDL_process_pending_messages(current_input);
+
+                SDL_load_game_code(&dynamic_game, &code);
+
+                if(code.update_and_render)
+                {
+                    code.update_and_render(buffer.game_buffer, &memory, current_input);
+                }
+
+                SDL_update_window(window, renderer, &buffer);
+
+                swap(current_input, last_input);
+            }
         }
-      }
     }
 
     return 0;
