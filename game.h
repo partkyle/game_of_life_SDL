@@ -83,13 +83,13 @@ typedef struct game_input
 
 typedef struct game_memory
 {
-  bool32 is_initialized;
+    bool32 is_initialized;
 
-  uint64 permanent_storage_size;
-  void *permanent_storage; // NOTE(casey): REQUIRED to be cleared to zero at startup
+    uint64 permanent_storage_size;
+    void *permanent_storage; // NOTE(casey): REQUIRED to be cleared to zero at startup
 
-  uint64 transient_storage_size;
-  void *transient_storage; // NOTE(casey): REQUIRED to be cleared to zero at startup
+    uint64 transient_storage_size;
+    void *transient_storage; // NOTE(casey): REQUIRED to be cleared to zero at startup
 } game_memory;
 
 #define GAME_UPDATE_AND_RENDER(name) int32 name(game_offscreen_buffer *buffer, game_memory *memory, game_input *input)
@@ -99,18 +99,18 @@ typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
 
 typedef struct game_code
 {
-  void *game_code_dll;
+    void *game_code_dll;
 
-  uint64 DLL_last_write_time;
+    uint64 DLL_last_write_time;
 
-  game_update_and_render *update_and_render;
+    game_update_and_render *update_and_render;
 } game_code;
 
 typedef struct platform_dynamic_game
 {
-  char dll_filename[MAX_PATH_LENGTH];
-  char tmp_dll_filename[MAX_PATH_LENGTH];
-  char lock_filename[MAX_PATH_LENGTH];
+    char dll_filename[MAX_PATH_LENGTH];
+    char tmp_dll_filename[MAX_PATH_LENGTH];
+    char lock_filename[MAX_PATH_LENGTH];
 } platform_dynamic_game;
 
 
