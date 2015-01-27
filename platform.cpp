@@ -85,29 +85,45 @@
 
 #ifdef _WIN32
   #include "windows.h"
+  #include <string.h>
 
-  internal void
-  platform_unload_game_code(game_code *code)
+  internal platform_dynamic_game
+  platform_dynamic_game_load(char *dll_filename)
   {
-    if (code->game_code_dll)
-    {
-      FreeLibrary((HMODULE)code->game_code_dll);
-      code->game_code_dll = 0;
-      code->game_code_dll = 0;
-      code->update_and_render = 0;
-    }
+    platform_dynamic_game game = {};
+
+    char module_filename[MAX_PATH_LENGTH] = {};
+    GetModuleFileNameA(0, module_filename, array_count(module_filename));
+
+    strcpy(game.dll_filename, module_filename);
+    // find one index past the last slash
+    char *last_slash = strrchr(game.dll_filename, '\\');
+    ++last_slash;
+
+    // add the filename from the slash
+    strcpy(last_slash, dll_filename);
+
+    strcpy(game.tmp_dll_filename, game.dll_filename);
+    strcat(game.tmp_dll_filename, "_tmp.dll");
+
+    strcat(game.dll_filename, ".dll");
+
+    strcpy(game.lock_filename, game.dll_filename);
+    strcat(game.lock_filename, ".lock");
+
+    return game;
   }
 
   internal game_code
-  platform_load_game_code(char *filename)
+  platform_load_game_code(platform_dynamic_game *game)
   {
     game_code code = {};
 
     WIN32_FILE_ATTRIBUTE_DATA Ignored;
-    if(!GetFileAttributesEx("w:\\sdl_platform\\build\\gamedll.lock", GetFileExInfoStandard, &Ignored))
+    if(!GetFileAttributesEx(game->lock_filename, GetFileExInfoStandard, &Ignored))
     {
-      CopyFile("w:\\sdl_platform\\build\\game.dll", "w:\\sdl_platform\\build\\game_running.dll", FALSE);
-      code.game_code_dll = LoadLibraryA("w:\\sdl_platform\\build\\game_running.dll");
+      CopyFile(game->dll_filename, game->tmp_dll_filename, false);
+      code.game_code_dll = LoadLibraryA(game->tmp_dll_filename);
       if(code.game_code_dll)
       {
         code.update_and_render = (game_update_and_render *)
@@ -116,5 +132,16 @@
     }
 
     return code;
+  }
+
+  internal void
+  platform_unload_game_code(game_code *code)
+  {
+    if (code->game_code_dll)
+    {
+      FreeLibrary((HMODULE)code->game_code_dll);
+      code->game_code_dll = 0;
+      code->update_and_render = 0;
+    }
   }
 #endif

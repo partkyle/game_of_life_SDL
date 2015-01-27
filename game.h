@@ -3,6 +3,14 @@
 
 #include "types.h"
 
+#define KB(Value) ((Value)*1024LL)
+#define MB(Value) (KB(Value)*1024LL)
+#define GB(Value) (MB(Value)*1024LL)
+#define TB(Value) (GB(Value)*1024LL)
+
+#define array_count(array) (sizeof(array) / sizeof((array)[0]))
+
+
 typedef struct game_offscreen_buffer
 {
     // NOTE(casey): Pixels are alwasy 32-bits wide, Memory Order BB GG RR XX
@@ -85,16 +93,22 @@ typedef struct game_state
 #define GAME_UPDATE_AND_RENDER(name) int32 name(game_offscreen_buffer *buffer, game_memory *memory, game_input *input)
 typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
 
+#define MAX_PATH_LENGTH 1024
+
 typedef struct game_code
 {
-  void* game_code_dll;
+  void *game_code_dll;
+
   uint64 DLL_last_write_time;
 
-    // IMPORTANT(casey): Either of the callbacks can be 0!  You must
-    // check before calling.
-  game_update_and_render* update_and_render;
-
-  bool32 valid;
+  game_update_and_render *update_and_render;
 } game_code;
+
+typedef struct platform_dynamic_game
+{
+  char dll_filename[MAX_PATH_LENGTH];
+  char tmp_dll_filename[MAX_PATH_LENGTH];
+  char lock_filename[MAX_PATH_LENGTH];
+} platform_dynamic_game;
 
 #endif

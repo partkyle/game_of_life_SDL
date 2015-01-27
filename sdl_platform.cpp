@@ -136,10 +136,16 @@ SDL_get_window_dimension(SDL_Window *Window)
     return(result);
 }
 
-internal game_code
-SDL_load_game_code(char *filename)
+internal platform_dynamic_game
+SDL_dynamic_platform_game(char *dll_filename)
 {
-  return platform_load_game_code(filename);
+  return platform_dynamic_game_load(dll_filename);
+}
+
+internal game_code
+SDL_load_game_code(platform_dynamic_game *game)
+{
+  return platform_load_game_code(game);
 }
 
 internal void
@@ -178,7 +184,8 @@ main(int argc, char *arg[])
       buffer.game_buffer = &game_buffer;
 
       char *code_filename = "game";
-      game_code code = SDL_load_game_code(code_filename);
+      platform_dynamic_game dynamic_game = SDL_dynamic_platform_game(code_filename);
+      game_code code = SDL_load_game_code(&dynamic_game);
 
       if(renderer)
       {
@@ -192,8 +199,8 @@ main(int argc, char *arg[])
         game_input *last_input = &input[1];
 
         game_memory memory = {};
-        memory.permanent_storage_size = 64 * 1024 * 1024;
-        memory.transient_storage_size = 1 * 1024 * 1024 * 1024;
+        memory.permanent_storage_size = MB(64);
+        memory.transient_storage_size = GB(1);
         void *memory_block = malloc(memory.permanent_storage_size + memory.transient_storage_size);
 
         memory.permanent_storage = memory_block;
@@ -215,7 +222,7 @@ main(int argc, char *arg[])
           Running = SDL_process_pending_messages(current_input);
 
           SDL_unload_game_code(&code);
-          code = SDL_load_game_code(code_filename);
+          code = SDL_load_game_code(&dynamic_game);
 
           if(code.update_and_render)
           {

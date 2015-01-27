@@ -12,8 +12,7 @@ lockfile=build/game.so.lock
 mkdir -p build
 
 touch $lockfile
-
-CC game.cpp $CFLAGS $LDFLAGS -g -shared -undefined dynamic_lookup -o build/game.so
-CC sdl_platform.cpp $CFLAGS $LDFLAGS -g -o build/sdl_platform
-
+  CC game.cpp $CFLAGS $LDFLAGS -g -shared -undefined dynamic_lookup -o build/game.so
 rm $lockfile
+
+CC sdl_platform.cpp $CFLAGS $LDFLAGS -g -o build/sdl_platform
