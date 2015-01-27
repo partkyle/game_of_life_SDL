@@ -39,20 +39,20 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
       i < 5;
       ++i)
   {
-    game_controller_input *controller = &input->Controllers[i];
-    if(controller->MoveUp.EndedDown)
+    game_controller_input *controller = &input->controllers[i];
+    if(controller->move_up.ended_down)
     {
         --state->greenoffset;
     }
-    if(controller->MoveDown.EndedDown)
+    if(controller->move_down.ended_down)
     {
         ++state->greenoffset;
     }
-    if(controller->MoveLeft.EndedDown)
+    if(controller->move_left.ended_down)
     {
         --state->blueoffset;
     }
-    if(controller->MoveRight.EndedDown)
+    if(controller->move_right.ended_down)
     {
         ++state->blueoffset;
     }

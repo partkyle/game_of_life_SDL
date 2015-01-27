@@ -6,10 +6,10 @@
 internal void
 SDL_process_keyboard_control(game_button_state *new_state, bool32 is_down)
 {
-  if(new_state->EndedDown != is_down)
+  if(new_state->ended_down != is_down)
   {
-      new_state->EndedDown = is_down;
-      ++new_state->HalfTransitionCount;
+      new_state->ended_down = is_down;
+      ++new_state->half_transition_count;
   }
 }
 
@@ -20,22 +20,22 @@ SDL_process_keyboard_message(SDL_Keysym keysym, game_controller_input *controlle
     {
         case SDLK_w:
         {
-            SDL_process_keyboard_control(&controller->MoveUp, is_down);
+            SDL_process_keyboard_control(&controller->move_up, is_down);
         } break;
 
         case SDLK_a:
         {
-            SDL_process_keyboard_control(&controller->MoveLeft, is_down);
+            SDL_process_keyboard_control(&controller->move_left, is_down);
         } break;
 
         case SDLK_s:
         {
-            SDL_process_keyboard_control(&controller->MoveDown, is_down);
+            SDL_process_keyboard_control(&controller->move_down, is_down);
         } break;
 
         case SDLK_d:
         {
-            SDL_process_keyboard_control(&controller->MoveRight, is_down);
+            SDL_process_keyboard_control(&controller->move_right, is_down);
         } break;
     }
 }
@@ -53,12 +53,12 @@ handle_event(SDL_Event *event, game_input *input)
 
         case SDL_KEYDOWN:
         {
-            SDL_process_keyboard_message(event->key.keysym, &input->Controllers[0], true);
+            SDL_process_keyboard_message(event->key.keysym, &input->controllers[0], true);
         } break;
 
         case SDL_KEYUP:
         {
-            SDL_process_keyboard_message(event->key.keysym, &input->Controllers[0], false);
+            SDL_process_keyboard_message(event->key.keysym, &input->controllers[0], false);
         } break;
     }
     return(should_quit);

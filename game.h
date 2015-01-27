@@ -15,53 +15,53 @@ typedef struct game_offscreen_buffer
 
 typedef struct game_button_state
 {
-    int HalfTransitionCount;
-    bool32 EndedDown;
+    int half_transition_count;
+    bool32 ended_down;
 } game_button_state;
 
 typedef struct game_controller_input
 {
-    bool32 IsConnected;
-    bool32 IsAnalog;
-    real32 StickAverageX;
-    real32 StickAverageY;
+    bool32 is_connected;
+    bool32 is_analog;
+    real32 stick_average_x;
+    real32 stick_average_y;
 
     union
     {
         game_button_state Buttons[12];
         struct
         {
-            game_button_state MoveUp;
-            game_button_state MoveDown;
-            game_button_state MoveLeft;
-            game_button_state MoveRight;
+            game_button_state move_up;
+            game_button_state move_down;
+            game_button_state move_left;
+            game_button_state move_right;
 
-            game_button_state ActionUp;
-            game_button_state ActionDown;
-            game_button_state ActionLeft;
-            game_button_state ActionRight;
+            game_button_state action_up;
+            game_button_state action_down;
+            game_button_state action_left;
+            game_button_state action_right;
 
-            game_button_state LeftShoulder;
-            game_button_state RightShoulder;
+            game_button_state left_shoulder;
+            game_button_state right_shoulder;
 
-            game_button_state Back;
-            game_button_state Start;
+            game_button_state back;
+            game_button_state start;
 
             // NOTE(casey): All buttons must be added above this line
 
-            game_button_state Terminator;
+            game_button_state terminator;
         };
     };
 } game_controller_input;
 
 typedef struct game_input
 {
-    game_button_state MouseButtons[5];
-    int32 MouseX, MouseY, MouseZ;
+    game_button_state mouse_buttons[5];
+    int32 mouse_x, mouse_y, mouse_z;
 
     real32 dtForFrame;
 
-    game_controller_input Controllers[5];
+    game_controller_input controllers[5];
 } game_input;
 
 typedef struct game_memory
