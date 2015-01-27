@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include "common.h"
+#include <time.h>
 
 typedef struct game_offscreen_buffer
 {
@@ -61,6 +62,7 @@ typedef struct game_input
     int32 rel_mouse_x, rel_mouse_y;
 
     real32 dtForFrame;
+    time_t t;
 
     game_controller_input controllers[5];
 } game_input;

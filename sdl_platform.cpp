@@ -209,6 +209,8 @@ main(int argc, char *arg[])
 
             while(Running)
             {
+                current_input->t = time(0);
+                current_input->dtForFrame = 1000.0f*(current_input->t - last_input->t);
                 // TODO(partkyle): handle mouse relative to game size, not window size:
                 // http://stackoverflow.com/questions/26238701/sdl2-resizing-the-window-mouse-position
 

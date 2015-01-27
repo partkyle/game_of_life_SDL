@@ -45,7 +45,7 @@ win32_get_last_write_time(char *filename)
 internal void
 platform_unload_game_code(game_code *code)
 {
-    if (code->game_code_dll)
+    if(code->game_code_dll)
     {
         FreeLibrary((HMODULE)code->game_code_dll);
         code->game_code_dll = 0;
