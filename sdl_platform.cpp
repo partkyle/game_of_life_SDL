@@ -204,6 +204,9 @@ main(int argc, char *arg[])
 
             while(Running)
             {
+                // TODO(partkyle): handle mouse relative to game size, not window size:
+                // http://stackoverflow.com/questions/26238701/sdl2-resizing-the-window-mouse-position
+
                 // clear out mouse input
                 int32 mouse_buttons = SDL_GetMouseState(&current_input->mouse_x, &current_input->mouse_y);
 
