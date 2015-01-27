@@ -5,6 +5,7 @@
 #include "common.h"
 #include "game.h"
 
+// TODO(partkyle): handle game.h import here
 struct sdl_offscreen_buffer
 {
     // NOTE(casey): Pixels are alwasy 32-bits wide, Memory Order BB GG RR XX
