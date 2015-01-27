@@ -1,4 +1,5 @@
 #include "game.h"
+#include <stdio.h>
 
 internal void
 RenderWeirdGradient(game_offscreen_buffer *buffer, int blueoffset, int greenoffset)
@@ -27,7 +28,37 @@ RenderWeirdGradient(game_offscreen_buffer *buffer, int blueoffset, int greenoffs
 
 extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 {
-  RenderWeirdGradient(buffer, 0, 0);
+  game_state *state = (game_state *)memory->permanent_storage;
+
+  if(!memory->is_initialized)
+  {
+    memory->is_initialized = true;
+  }
+
+  for(int32 i = 0;
+      i < 5;
+      ++i)
+  {
+    game_controller_input *controller = &input->Controllers[i];
+    if(controller->MoveUp.EndedDown)
+    {
+        --state->greenoffset;
+    }
+    if(controller->MoveDown.EndedDown)
+    {
+        ++state->greenoffset;
+    }
+    if(controller->MoveLeft.EndedDown)
+    {
+        --state->blueoffset;
+    }
+    if(controller->MoveRight.EndedDown)
+    {
+        ++state->blueoffset;
+    }
+  }
+
+  RenderWeirdGradient(buffer, state->blueoffset, state->greenoffset);
 
   return(0);
 }
