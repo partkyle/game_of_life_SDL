@@ -2,7 +2,7 @@
 #define SDL_EXAMPLE_H
 
 #include "SDL.h"
-#include "types.h"
+#include "common.h"
 #include "game.h"
 
 struct sdl_offscreen_buffer

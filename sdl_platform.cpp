@@ -1,6 +1,6 @@
 #include "platform.cpp"
 
-#include "types.h"
+#include "common.h"
 #include "sdl_platform.h"
 
 internal void
