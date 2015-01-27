@@ -226,7 +226,7 @@ main(int argc, char *arg[])
 
           SDL_update_window(window, renderer, &buffer);
 
-          swap(game_input *, current_input, last_input);
+          swap(current_input, last_input);
         }
       }
     }
