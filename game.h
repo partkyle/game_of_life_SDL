@@ -12,6 +12,12 @@
 
 #define assert(expression) if(!(expression)) {*(volatile int *)0 = 0;}
 
+#define swap(type, A, B) \
+do { \
+    type _tmp = (A); \
+    (A) = (B); \
+    (B) = _tmp; \
+} while(0)
 
 typedef struct game_offscreen_buffer
 {

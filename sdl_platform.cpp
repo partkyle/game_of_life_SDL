@@ -226,11 +226,7 @@ main(int argc, char *arg[])
 
           SDL_update_window(window, renderer, &buffer);
 
-          {
-            game_input *tmp = current_input;
-            current_input = last_input;
-            last_input = current_input;
-          }
+          swap(game_input *, current_input, last_input);
         }
       }
     }
