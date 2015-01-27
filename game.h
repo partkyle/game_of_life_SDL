@@ -90,14 +90,6 @@ typedef struct game_code
     game_update_and_render *update_and_render;
 } game_code;
 
-typedef struct platform_dynamic_game
-{
-    char dll_filename[MAX_PATH_LENGTH];
-    char tmp_dll_filename[MAX_PATH_LENGTH];
-    char lock_filename[MAX_PATH_LENGTH];
-} platform_dynamic_game;
-
-
 typedef struct memory_arena
 {
     memory_index size;

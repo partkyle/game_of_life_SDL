@@ -1,4 +1,4 @@
-#include "game.h"
+#include "sdl_platform.h"
 
 #ifdef __APPLE__
 #include "osx_platform.cpp"

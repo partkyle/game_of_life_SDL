@@ -19,4 +19,11 @@ struct sdl_window_dimension
   int32 height;
 };
 
+typedef struct platform_dynamic_game
+{
+    char dll_filename[MAX_PATH_LENGTH];
+    char tmp_dll_filename[MAX_PATH_LENGTH];
+    char lock_filename[MAX_PATH_LENGTH];
+} platform_dynamic_game;
+
 #endif
