@@ -2,9 +2,9 @@
 
 CC="clang -std=c89"
 
-CFLAGS="-Wno-c++11-compat-deprecated-writable-strings -ISDL2-2.0.3/include"
+CFLAGS="-Wno-c++11-compat-deprecated-writable-strings -Ivendor/SDL2-2.0.3/include"
 
-LDFLAGS="-LSDL2-2.0.3/lib -lSDL2"
+LDFLAGS="-Lvendor/SDL2-2.0.3/lib -lSDL2"
 
 
 lockfile=build/game.so.lock
