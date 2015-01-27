@@ -177,7 +177,7 @@ main(int argc, char *arg[])
       game_offscreen_buffer game_buffer = {};
       buffer.game_buffer = &game_buffer;
 
-      char *code_filename = "/Users/partkyle/sdl/build/game.so";
+      char *code_filename = "game";
       game_code code = SDL_load_game_code(code_filename);
 
       if(renderer)

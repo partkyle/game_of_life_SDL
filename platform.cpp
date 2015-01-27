@@ -6,6 +6,8 @@
 
   // dynamic loading
   #include <dlfcn.h>
+  #include <mach-o/dyld.h>
+  #include <strings.h>
 
   internal void
   platform_unload_game_code(game_code *code)
@@ -18,14 +20,31 @@
     }
   }
 
-
   internal game_code
   platform_load_game_code(char *filename)
   {
     game_code code = {};
 
+    // TODO(partkyle): make this less of a hack
+    // relative path lookup
+    char buffer[256];
+    uint32 size = 256;
+
+    // TODO(partkyle) is this the only way to do this?
+    _NSGetExecutablePath(buffer, &size);
+
+    // find one index past the last slash
+    char *last_slash = strrchr(buffer, '/');
+    ++last_slash;
+
+    // add the filename from the slash
+    strcpy(last_slash, filename);
+
+    // add .so on this platform
+    strcat(buffer, ".so");
+
     // TODO(partkyle): make this path relative
-    code.game_code_dll = dlopen("/Users/partkyle/code/sdl_platform/build/game.so", RTLD_LAZY|RTLD_GLOBAL);
+    code.game_code_dll = dlopen(buffer, RTLD_LAZY|RTLD_GLOBAL);
     if(code.game_code_dll)
     {
       // TODO(partkyle): make the reload work
@@ -50,7 +69,6 @@
       code->update_and_render = 0;
     }
   }
-
 
   internal game_code
   platform_load_game_code(char *filename)
