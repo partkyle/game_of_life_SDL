@@ -53,7 +53,7 @@
 
 
   internal game_code
-  SDL_load_game_code(char *filename)
+  platform_load_game_code(char *filename)
   {
     game_code code = {};
 
