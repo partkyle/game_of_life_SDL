@@ -114,24 +114,18 @@
     return game;
   }
 
-  internal game_code
-  platform_load_game_code(platform_dynamic_game *game)
+  inline uint64
+  win32_get_last_write_time(char *filename)
   {
-    game_code code = {};
+    uint64 result = 0;
 
-    WIN32_FILE_ATTRIBUTE_DATA Ignored;
-    if(!GetFileAttributesEx(game->lock_filename, GetFileExInfoStandard, &Ignored))
+    WIN32_FILE_ATTRIBUTE_DATA data;
+    if(GetFileAttributesExA(filename, GetFileExInfoStandard, &data))
     {
-      CopyFile(game->dll_filename, game->tmp_dll_filename, false);
-      code.game_code_dll = LoadLibraryA(game->tmp_dll_filename);
-      if(code.game_code_dll)
-      {
-        code.update_and_render = (game_update_and_render *)
-            GetProcAddress((HMODULE)code.game_code_dll, "GameUpdateAndRender");
-      }
+      result = ((uint64)data.ftLastWriteTime.dwLowDateTime << 32) | ((uint64)data.ftLastWriteTime.dwLowDateTime);
     }
 
-    return code;
+    return result;
   }
 
   internal void
@@ -144,4 +138,28 @@
       code->update_and_render = 0;
     }
   }
+
+  internal void
+  platform_load_game_code(platform_dynamic_game *game, game_code *code)
+  {
+    WIN32_FILE_ATTRIBUTE_DATA Ignored;
+    if(!GetFileAttributesEx(game->lock_filename, GetFileExInfoStandard, &Ignored))
+    {
+      uint64 time_updated = win32_get_last_write_time(game->dll_filename);
+      if(code->DLL_last_write_time < time_updated)
+      {
+        platform_unload_game_code(code);
+
+        code->DLL_last_write_time = time_updated;
+        CopyFile(game->dll_filename, game->tmp_dll_filename, false);
+        code->game_code_dll = LoadLibraryA(game->tmp_dll_filename);
+        if(code->game_code_dll)
+        {
+          code->update_and_render = (game_update_and_render *)
+              GetProcAddress((HMODULE)code->game_code_dll, "GameUpdateAndRender");
+        }
+      }
+    }
+  }
+
 #endif

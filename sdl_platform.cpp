@@ -142,16 +142,10 @@ SDL_dynamic_platform_game(char *dll_filename)
   return platform_dynamic_game_load(dll_filename);
 }
 
-internal game_code
-SDL_load_game_code(platform_dynamic_game *game)
-{
-  return platform_load_game_code(game);
-}
-
 internal void
-SDL_unload_game_code(game_code *code)
+SDL_load_game_code(platform_dynamic_game *game, game_code *code)
 {
-  platform_unload_game_code(code);
+  platform_load_game_code(game, code);
 }
 
 int
@@ -185,7 +179,8 @@ main(int argc, char *arg[])
 
       char *code_filename = "game";
       platform_dynamic_game dynamic_game = SDL_dynamic_platform_game(code_filename);
-      game_code code = SDL_load_game_code(&dynamic_game);
+      game_code code = {};
+      SDL_load_game_code(&dynamic_game, &code);
 
       if(renderer)
       {
@@ -221,8 +216,7 @@ main(int argc, char *arg[])
 
           Running = SDL_process_pending_messages(current_input);
 
-          SDL_unload_game_code(&code);
-          code = SDL_load_game_code(&dynamic_game);
+          SDL_load_game_code(&dynamic_game, &code);
 
           if(code.update_and_render)
           {
