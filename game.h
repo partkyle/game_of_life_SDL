@@ -10,6 +10,8 @@
 
 #define array_count(array) (sizeof(array) / sizeof((array)[0]))
 
+#define assert(expression) if(!(expression)) {*(int *)0 = 0;}
+
 
 typedef struct game_offscreen_buffer
 {
@@ -84,12 +86,6 @@ typedef struct game_memory
   void *transient_storage; // NOTE(casey): REQUIRED to be cleared to zero at startup
 } game_memory;
 
-typedef struct game_state
-{
-  int32 blueoffset;
-  int32 greenoffset;
-} game_state;
-
 #define GAME_UPDATE_AND_RENDER(name) int32 name(game_offscreen_buffer *buffer, game_memory *memory, game_input *input)
 typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
 
@@ -110,5 +106,34 @@ typedef struct platform_dynamic_game
   char tmp_dll_filename[MAX_PATH_LENGTH];
   char lock_filename[MAX_PATH_LENGTH];
 } platform_dynamic_game;
+
+
+typedef struct memory_arena
+{
+    memory_index size;
+    uint8 *base;
+    memory_index used;
+} memory_arena;
+
+internal void
+initialize_arena(memory_arena *arena, memory_index size, uint8 *base)
+{
+    arena->size = size;
+    arena->base = base;
+    arena->used = 0;
+}
+
+#define push_struct(arena, type) (type *)push_size_(arena, sizeof(type))
+#define push_array(arena, count, type) (type *)push_size_(arena, (count)*sizeof(type))
+
+void *
+push_size_(memory_arena *arena, memory_index size)
+{
+    assert((arena->used + size) <= arena->size);
+    void *result = arena->base + arena->used;
+    arena->used += size;
+
+    return(result);
+}
 
 #endif

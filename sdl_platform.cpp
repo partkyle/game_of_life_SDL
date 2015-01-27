@@ -206,13 +206,14 @@ main(int argc, char *arg[])
         {
           // clear out mouse input
 
-          SDL_GetMouseState(&current_input->mouse_x, &current_input->mouse_y);
+          int32 mouse_buttons = SDL_GetMouseState(&current_input->mouse_x, &current_input->mouse_y);
 
           // SDL_GetRelativeMouseState requires the last known position of x and y
           current_input->rel_mouse_x = last_input->mouse_x;
           current_input->rel_mouse_y = last_input->mouse_y;
-
           SDL_GetRelativeMouseState(&current_input->rel_mouse_x, &current_input->rel_mouse_y);
+
+          current_input->mouse_buttons[0].ended_down = (mouse_buttons & SDL_BUTTON(SDL_BUTTON_LEFT));
 
           Running = SDL_process_pending_messages(current_input);
 
