@@ -33,9 +33,14 @@ SDL_process_keyboard_message(SDL_Keysym keysym, game_controller_input *controlle
             SDL_process_keyboard_control(&controller->move_down, is_down);
         } break;
 
-        case SDLK_d:
+        case SDLK_SPACE:
         {
-            SDL_process_keyboard_control(&controller->move_right, is_down);
+            SDL_process_keyboard_control(&controller->start, is_down);
+        } break;
+
+        case SDLK_ESCAPE:
+        {
+            SDL_process_keyboard_control(&controller->back, is_down);
         } break;
     }
 }
@@ -209,6 +214,24 @@ main(int argc, char *arg[])
 
             while(Running)
             {
+                // copy old input over
+                for(int controller_index = 0;
+                    controller_index < array_count(current_input->controllers);
+                    ++controller_index)
+                {
+                    game_controller_input *controller = &current_input->controllers[controller_index];
+                    game_controller_input *last_controller = &last_input->controllers[controller_index];
+                    for(int button_index = 0;
+                        button_index < array_count(controller->buttons);
+                        ++button_index)
+                    {
+                        controller->buttons[button_index].ended_down =
+                            last_controller->buttons[button_index].ended_down;
+                    }
+
+                }
+
+
                 current_input->t = time(0);
                 current_input->dtForFrame = 1000.0f*(current_input->t - last_input->t);
                 // TODO(partkyle): handle mouse relative to game size, not window size:

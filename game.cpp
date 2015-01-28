@@ -17,6 +17,8 @@ typedef struct game_state
 
     int32 framecount;
     int32 framerate;
+
+    bool32 paused;
 } game_state;
 
 internal uint32
@@ -119,6 +121,22 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         state->framerate = 5;
     }
 
+    for(int i = 0;
+        i < array_count(input->controllers);
+        ++i)
+    {
+        game_controller_input *controller = &input->controllers[i];
+        if(controller->back.ended_down)
+        {
+            state->paused = true;
+        }
+
+        if(controller->start.ended_down)
+        {
+            state->paused = false;
+        }
+    }
+
     real32 cell_width = (real32)buffer->width / (real32)state->cols;
     real32 cell_height = (real32)buffer->height / (real32)state->rows;
 
@@ -145,13 +163,16 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         state->framerate = MAX_FRAMERATE;
     }
 
-    if(++state->framecount > state->framerate)
+    if(!state->paused)
     {
-        state->framecount = 0;
+        if(++state->framecount > state->framerate)
+        {
+            state->framecount = 0;
 
-        swap(state->current_generation, state->prev_generation);
+            swap(state->current_generation, state->prev_generation);
 
-        next_generation(state->current_generation, state->prev_generation, state->rows, state->cols);
+            next_generation(state->current_generation, state->prev_generation, state->rows, state->cols);
+        }
     }
 
     for (int y = 0; y < state->rows; ++y)
@@ -167,7 +188,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             if(cell)
             {
                 r = 1.0f - (real32)state->framerate / (real32)MAX_FRAMERATE;
-                g = 0.5f;
+                g = 0.4f;
                 b = (real32)state->framerate / (real32)MAX_FRAMERATE;
             }
 
