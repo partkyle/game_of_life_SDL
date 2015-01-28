@@ -84,12 +84,18 @@ handle_event(SDL_Event *event, game_input *input)
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP:
         {
-            switch(event->button.button)
+            // TODO(partkyle): find a better way to handle the mouse click bug
+            //      this is only slightly better, since it still requires another click
+            //      in the frame to behave normal again.
+            if(input->mouse_x > 0 && input->mouse_y > 0)
             {
-                case SDL_BUTTON_LEFT:
+                switch(event->button.button)
                 {
-                    SDL_process_keyboard_control(&input->mouse_buttons[0], event->button.state == SDL_PRESSED);
-                } break;
+                    case SDL_BUTTON_LEFT:
+                    {
+                        SDL_process_keyboard_control(&input->mouse_buttons[0], event->button.type == SDL_MOUSEBUTTONDOWN);
+                    } break;
+                }
             }
         } break;
 
