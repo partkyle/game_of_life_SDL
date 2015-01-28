@@ -247,6 +247,8 @@ main(int argc, char *arg[])
 
             while(Running)
             {
+                // TODO(partkyle): clean up input clearing code, too many bugs
+
                 // NOTE(partkyle): copy old input over to handle the appropriate ended_down state
                 for(int controller_index = 0;
                     controller_index < array_count(current_input->controllers);
@@ -276,6 +278,8 @@ main(int argc, char *arg[])
 
                 current_input->rel_mouse_x = 0;
                 current_input->rel_mouse_y = 0;
+
+                current_input->mouse_z = 0;
 
                 Running = SDL_process_pending_messages(current_input);
 
