@@ -202,7 +202,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     real32 alpha_value = 1.0f;
     if(state->paused)
     {
-        alpha_value = fabs((real32)sin(state->total_time / 50.0f));
+        alpha_value = 0.5f*((real32)sin((real32)state->total_time / 50.0f) + 1.0f);
     }
 
     for (int y = 0; y < state->rows; ++y)
