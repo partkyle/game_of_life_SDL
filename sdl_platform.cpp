@@ -93,7 +93,7 @@ handle_event(SDL_Event *event, game_input *input)
                 {
                     case SDL_BUTTON_LEFT:
                     {
-                        SDL_process_keyboard_control(&input->mouse_buttons[0], event->button.type == SDL_MOUSEBUTTONDOWN);
+                        SDL_process_keyboard_control(&input->MouseLeft, event->button.type == SDL_MOUSEBUTTONDOWN);
                     } break;
                 }
             }

@@ -165,7 +165,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     int32 mouse_x = (int32)(input->mouse_x / cell_width);
     int32 mouse_y = (int32)(input->mouse_y / cell_height);
 
-    if(input->mouse_buttons[0].ended_down)
+    if(input->MouseLeft.ended_down)
     {
         set_board_value(state->current_generation, state->rows, state->cols,
         mouse_x, mouse_y, 1);
