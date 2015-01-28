@@ -9,9 +9,9 @@
 
 #define assert(expression) if(!(expression)) {*(volatile int *)0 = 0;}
 
-#define swap(A, B) \
+#define swap(type, A, B) \
 do { \
-    typeof((A)) _tmp = (A); \
+    type _tmp = (A); \
     (A) = (B); \
     (B) = _tmp; \
 } while(0)

@@ -48,7 +48,7 @@ SDL_process_keyboard_message(SDL_Keysym keysym, game_controller_input *controlle
 internal bool32
 handle_event(SDL_Event *event, game_input *input)
 {
-    bool32 should_quit;
+    bool32 should_quit = false;
     switch(event->type)
     {
         case SDL_QUIT:
@@ -292,7 +292,7 @@ main(int argc, char *arg[])
 
                 SDL_update_window(window, renderer, &buffer);
 
-                swap(current_input, last_input);
+                swap(game_input *, current_input, last_input);
             }
         }
     }
