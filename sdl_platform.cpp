@@ -66,6 +66,33 @@ handle_event(SDL_Event *event, game_input *input)
             SDL_process_keyboard_message(event->key.keysym, &input->controllers[0], false);
         } break;
 
+        case SDL_MOUSEMOTION:
+        {
+            input->mouse_x = event->motion.x;
+            input->mouse_y = event->motion.y;
+            // TODO(partkyle): test this relative motion out, it might still be broken
+            //     since moving it in the SDL_PollEvent loop
+            input->rel_mouse_x += event->motion.xrel;
+            input->rel_mouse_y += event->motion.yrel;
+        } break;
+
+        // TODO(partkyle): figure out if I want a click coordinate
+        // TODO(partkyle): this supports double and triple clicks
+        //     that could be useful.
+        // TODO(partkyle): there is a mouse button issue when clicking the titlebar:
+        //     https://bugzilla.libsdl.org/show_bug.cgi?id=2842
+        case SDL_MOUSEBUTTONDOWN:
+        case SDL_MOUSEBUTTONUP:
+        {
+            switch(event->button.button)
+            {
+                case SDL_BUTTON_LEFT:
+                {
+                    SDL_process_keyboard_control(&input->mouse_buttons[0], event->button.state == SDL_PRESSED);
+                } break;
+            }
+        } break;
+
         case SDL_MOUSEWHEEL:
         {
             input->mouse_z += event->wheel.y;
@@ -214,7 +241,7 @@ main(int argc, char *arg[])
 
             while(Running)
             {
-                // copy old input over
+                // NOTE(partkyle): copy old input over to handle the appropriate ended_down state
                 for(int controller_index = 0;
                     controller_index < array_count(current_input->controllers);
                     ++controller_index)
@@ -230,22 +257,19 @@ main(int argc, char *arg[])
                     }
                 }
 
+                // NOTE(partkyle): clear out mouse state
+                for(int i = 0;
+                    i < array_count(current_input->mouse_buttons);
+                    ++i)
+                {
+                    current_input->mouse_buttons[i].ended_down = last_input->mouse_buttons[i].ended_down;
+                }
+
                 current_input->t = time(0);
                 current_input->dtForFrame = 1000.0f*(current_input->t - last_input->t);
-                // TODO(partkyle): handle mouse relative to game size, not window size:
-                // http://stackoverflow.com/questions/26238701/sdl2-resizing-the-window-mouse-position
 
-                // clear out mouse input
-                int32 mouse_buttons = SDL_GetMouseState(&current_input->mouse_x, &current_input->mouse_y);
-                current_input->mouse_z = 0;
-
-                // SDL_GetRelativeMouseState requires the last known position of x and y
-                current_input->rel_mouse_x = last_input->mouse_x;
-                current_input->rel_mouse_y = last_input->mouse_y;
-                SDL_GetRelativeMouseState(&current_input->rel_mouse_x, &current_input->rel_mouse_y);
-
-                // TODO(partkyle): add other mouse buttons
-                current_input->mouse_buttons[0].ended_down = (mouse_buttons & SDL_BUTTON(SDL_BUTTON_LEFT));
+                current_input->rel_mouse_x = 0;
+                current_input->rel_mouse_y = 0;
 
                 Running = SDL_process_pending_messages(current_input);
 
