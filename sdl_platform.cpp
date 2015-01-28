@@ -228,9 +228,7 @@ main(int argc, char *arg[])
                         controller->buttons[button_index].ended_down =
                             last_controller->buttons[button_index].ended_down;
                     }
-
                 }
-
 
                 current_input->t = time(0);
                 current_input->dtForFrame = 1000.0f*(current_input->t - last_input->t);

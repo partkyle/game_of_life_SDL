@@ -1,6 +1,7 @@
 #include "game.h"
 #include <stdio.h>
 #include "game_of_life.cpp"
+#include <math.h>
 
 #define MIN_FRAMERATE 0
 #define MAX_FRAMERATE 30
@@ -19,6 +20,8 @@ typedef struct game_state
     int32 framerate;
 
     bool32 paused;
+
+    uint64 total_time;
 } game_state;
 
 internal uint32
@@ -34,9 +37,9 @@ round_real32_to_uint32(real32 value)
 }
 
 internal void
-draw_rectangle(game_offscreen_buffer *buffer,
+draw_rectangle_alpha(game_offscreen_buffer *buffer,
                real32 x, real32 y, real32 width, real32 height,
-               real32 r, real32 g, real32 b)
+               real32 r, real32 g, real32 b, real32 a)
 {
     int32 min_x = round_real32_to_int32(x);
     int32 min_y = round_real32_to_int32(y);
@@ -63,10 +66,6 @@ draw_rectangle(game_offscreen_buffer *buffer,
         max_y = buffer->height;
     }
 
-    uint32 color = ((round_real32_to_uint32(r * 255.0f) << 16) |
-                    (round_real32_to_uint32(g * 255.0f) << 8) |
-                    (round_real32_to_uint32(b * 255.0f) << 0));
-
     uint8 *row = ((uint8 *)buffer->memory +
                  min_x*buffer->bytes_per_pixel +
                  min_y*buffer->pitch);
@@ -80,11 +79,34 @@ draw_rectangle(game_offscreen_buffer *buffer,
             iterX < max_x;
             ++iterX)
         {
+            real32 dest_r = (real32)((*pixel >> 16) & 0xFF);
+            real32 dest_g = (real32)((*pixel >>  8) & 0xFF);
+            real32 dest_b = (real32)((*pixel >>  0) & 0xFF);
+
+            real32 new_r = (1.0f - a)*dest_r + a*r;
+            real32 new_g = (1.0f - a)*dest_g + a*g;
+            real32 new_b = (1.0f - a)*dest_b + a*b;
+
+            uint32 color = ((round_real32_to_uint32(new_r * 255.0f) << 16) |
+                            (round_real32_to_uint32(new_g * 255.0f) << 8) |
+                            (round_real32_to_uint32(new_b * 255.0f) << 0));
+
             *pixel++ = color;
         }
 
         row += buffer->pitch;
     }
+}
+
+internal void
+draw_rectangle(game_offscreen_buffer *buffer,
+               real32 x, real32 y, real32 width, real32 height,
+               real32 r, real32 g, real32 b)
+{
+    draw_rectangle_alpha(buffer,
+                         x, y,
+                         width, height,
+                         r, g, b, 1.0f);
 }
 
 extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
@@ -140,9 +162,6 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     real32 cell_width = (real32)buffer->width / (real32)state->cols;
     real32 cell_height = (real32)buffer->height / (real32)state->rows;
 
-    // debug rectangle
-    draw_rectangle(buffer, 0, 0, buffer->width, buffer->height, 1.0f, 0.0f, 1.0f);
-
     int32 mouse_x = (int32)(input->mouse_x / cell_width);
     int32 mouse_y = (int32)(input->mouse_y / cell_height);
 
@@ -175,49 +194,49 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         }
     }
 
+    // clear screen
+    draw_rectangle(buffer, 0, 0, buffer->width, buffer->height, 0.0f, 0.0f, 0.0f);
+
+    state->total_time += 1;
+
+    real32 alpha_value = 1.0f;
+    if(state->paused)
+    {
+        alpha_value = fabs((real32)sin(state->total_time / 50.0f));
+    }
+
     for (int y = 0; y < state->rows; ++y)
     {
         for (int x = 0; x < state->cols; ++x)
         {
             int32 cell = get_board_value(state->current_generation, state->rows, state->cols, x, y);
 
-            real32 r = 0.0f;
-            real32 g = 0.0f;
-            real32 b = 0.0f;
-
             if(cell)
             {
-                r = 1.0f - (real32)state->framerate / (real32)MAX_FRAMERATE;
-                g = 0.4f;
-                b = (real32)state->framerate / (real32)MAX_FRAMERATE;
-            }
+                real32 r = 1.0f - (real32)state->framerate / (real32)MAX_FRAMERATE;
+                real32 g = 0.4f;
+                real32 b = (real32)state->framerate / (real32)MAX_FRAMERATE;
 
-            if(mouse_x == x && mouse_y == y)
-            {
-                r = 0.5f;
-                g = 0.5f;
-                b = 0.1f;
+                draw_rectangle_alpha(buffer,
+                               x*cell_width, y*cell_height,
+                               cell_width, cell_height,
+                               r, g, b, alpha_value);
             }
-
-            draw_rectangle(buffer,
-                           x*cell_width, y*cell_height,
-                           cell_width, cell_height,
-                           r, g, b);
 
             int32 prev_cell = get_board_value(state->prev_generation,
                                               state->rows, state->cols,
                                               x, y);
             if(prev_cell)
             {
-                r = 1.0f;
-                g = 1.0f;
-                b = 1.0f;
-            }
+                real32 r = 1.0f;
+                real32 g = 1.0f;
+                real32 b = 1.0f;
 
-            draw_rectangle(buffer,
-                           (x*cell_width)+(cell_width*0.45f), (y*cell_height)+(cell_height*0.5f),
-                           1, 1,
-                           r, g, b);
+                draw_rectangle(buffer,
+                               (x*cell_width)+(cell_width*0.45f), (y*cell_height)+(cell_height*0.5f),
+                               1, 1,
+                               r, g, b);
+            }
         }
     }
 
