@@ -33,6 +33,11 @@ SDL_process_keyboard_message(SDL_Keysym keysym, game_controller_input *controlle
             SDL_process_keyboard_control(&controller->move_down, is_down);
         } break;
 
+        case SDLK_d:
+        {
+            SDL_process_keyboard_control(&controller->move_right, is_down);
+        } break;
+
         case SDLK_SPACE:
         {
             SDL_process_keyboard_control(&controller->start, is_down);
@@ -72,8 +77,8 @@ handle_event(SDL_Event *event, game_input *input)
             input->mouse_y = event->motion.y;
             // TODO(partkyle): test this relative motion out, it might still be broken
             //     since moving it in the SDL_PollEvent loop
-            input->rel_mouse_x += event->motion.xrel;
-            input->rel_mouse_y += event->motion.yrel;
+            input->rel_mouse_x = event->motion.xrel;
+            input->rel_mouse_y = event->motion.yrel;
         } break;
 
         // TODO(partkyle): figure out if I want a click coordinate

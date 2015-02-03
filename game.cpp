@@ -18,6 +18,12 @@ typedef struct game_state
     int32 rows;
     int32 cols;
 
+    real32 cell_height;
+    real32 cell_width;
+
+    real32 camera_x;
+    real32 camera_y;
+
     int32 framecount;
     int32 framerate;
 
@@ -124,8 +130,14 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         initialize_arena(&state->arena, memory->permanent_storage_size - sizeof(game_state),
         (uint8 *)memory->permanent_storage + sizeof(game_state));
 
-        state->rows = 9;
-        state->cols = 16;
+        state->rows = BOARD_SIZE;
+        state->cols = BOARD_SIZE;
+
+        state->cell_width = 30.0f;
+        state->cell_height = 30.0f;
+
+        // state->camera_x = bound_x;
+        // state->camera_y = bound_y;
 
         // glider
         state->current_generation[0*state->cols + 1] = 1;
@@ -158,18 +170,61 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         {
             state->paused = false;
         }
+
+        if(controller->move_up.ended_down)
+        {
+            state->camera_y -= 15.0f;
+
+            // if(state->camera_y < -bound_y)
+            // {
+            //     state->camera_y = bound_y;
+            // }
+        }
+
+        if(controller->move_down.ended_down)
+        {
+            state->camera_y += 15.0f;
+
+            // if(state->camera_y > bound_y)
+            // {
+            //     state->camera_y = bound_y;
+            // }
+        }
+
+        if(controller->move_left.ended_down)
+        {
+            state->camera_x -= 15.0f;
+
+            // if(state->camera_x < -bound_x)
+            // {
+            //     state->camera_x = -bound_x;
+            // }
+        }
+
+        if(controller->move_right.ended_down)
+        {
+            state->camera_x += 15.0f;
+
+            // if(state->camera_x > bound_x)
+            // {
+            //     state->camera_x = bound_x;
+            // }
+        }
     }
 
-    real32 cell_width = (real32)buffer->width / (real32)state->cols;
-    real32 cell_height = (real32)buffer->height / (real32)state->rows;
-
-    int32 mouse_x = (int32)(input->mouse_x / cell_width);
-    int32 mouse_y = (int32)(input->mouse_y / cell_height);
+    int32 mouse_x = (int32)((input->mouse_x + state->camera_x) / state->cell_width);
+    int32 mouse_y = (int32)((input->mouse_y + state->camera_y) / state->cell_height);
 
     if(input->MouseLeft.ended_down)
     {
-        set_board_value(state->current_generation, state->rows, state->cols,
-                        mouse_x, mouse_y, 1);
+        if(mouse_x >= 0 &&
+           mouse_x < state->cols &&
+           mouse_y >= 0 &&
+           mouse_y < state->rows)
+        {
+            set_board_value(state->current_generation, state->rows, state->cols,
+                            mouse_x, mouse_y, 1);
+        }
     }
 
     // update framerate from the mouse wheel
@@ -195,8 +250,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         }
     }
 
-    // clear screen
-    draw_rectangle(buffer, 0, 0, buffer->width, buffer->height, 0.0f, 0.0f, 0.0f);
+    // DEBUG layer to show edges
+    draw_rectangle(buffer, 0, 0, buffer->width, buffer->height, 1.0f, 0.0f, 1.0f);
 
     state->total_time += 1;
 
@@ -206,11 +261,27 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         alpha_value = 0.5f*((real32)sin((real32)state->total_time / 50.0f) + 1.0f);
     }
 
-    for (int y = 0; y < state->rows; ++y)
+    for (int y = 0; y < BOARD_SIZE; ++y)
     {
-        for (int x = 0; x < state->cols; ++x)
+        for (int x = 0; x < BOARD_SIZE; ++x)
         {
             int32 cell = get_board_value(state->current_generation, state->rows, state->cols, x, y);
+
+            real32 cell_pos_x = x*state->cell_width - state->camera_x;
+            real32 cell_pos_y = y*state->cell_height - state->camera_y;
+
+            // grid lines
+            draw_rectangle(buffer,
+                           cell_pos_x, cell_pos_y,
+                           state->cell_width, state->cell_height,
+                           0.5f, 0.5f, 0.5f);
+
+            // dead cells by default (used for alpha)
+            draw_rectangle(buffer,
+                           1+cell_pos_x, 1+cell_pos_y,
+                           state->cell_width-1, state->cell_height-1,
+                           0.0f, 0.0f, 0.0f);
+
 
             if(cell)
             {
@@ -218,12 +289,14 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                 real32 g = 0.4f;
                 real32 b = (real32)state->framerate / (real32)MAX_FRAMERATE;
 
+                // live cells
                 draw_rectangle_alpha(buffer,
-                               x*cell_width, y*cell_height,
-                               cell_width, cell_height,
-                               r, g, b, alpha_value);
+                                     1+cell_pos_x, 1+cell_pos_y,
+                                     state->cell_width-1, state->cell_height-1,
+                                     r, g, b, alpha_value);
             }
 
+            // prev gen dots
             int32 prev_cell = get_board_value(state->prev_generation,
                                               state->rows, state->cols,
                                               x, y);
@@ -234,7 +307,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                 real32 b = 1.0f;
 
                 draw_rectangle(buffer,
-                               (x*cell_width)+(cell_width*0.45f), (y*cell_height)+(cell_height*0.5f),
+                               cell_pos_x+(state->cell_width*0.45f), cell_pos_y+(state->cell_height*0.5f),
                                1, 1,
                                r, g, b);
             }

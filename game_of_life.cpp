@@ -21,7 +21,9 @@ constrain(int x, int bound)
 int32
 get_board_value(const int32 *board, int32 rows, int32 cols, int32 x, int32 y)
 {
+    assert(x >= 0);
     assert(x < cols);
+    assert(y >= 0);
     assert(y < rows);
     return board[y * cols + x];
 }
