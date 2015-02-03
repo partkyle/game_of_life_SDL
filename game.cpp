@@ -190,6 +190,16 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             state->framerate = MIN(state->framerate+1, MAX_FRAMERATE);
         }
 
+        if(controller->action_left.ended_down)
+        {
+            state->framerate = MAX_FRAMERATE;
+        }
+
+        if(controller->action_right.ended_down)
+        {
+            state->framerate = MIN_FRAMERATE;
+        }
+
         if(controller->move_up.ended_down)
         {
             state->camera_y -= 15.0f;
