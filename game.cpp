@@ -168,19 +168,6 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         state->cell_width = 30.0f;
         state->cell_height = 30.0f;
 
-        // glider
-        // state->current_generation[0*state->cols + 1] = 1;
-        // state->current_generation[1*state->cols + 2] = 1;
-        // state->current_generation[2*state->cols + 0] = 1;
-        // state->current_generation[2*state->cols + 1] = 1;
-        // state->current_generation[2*state->cols + 2] = 1;
-
-        // state->current_generation[5*state->cols + 11] = 1;
-        // state->current_generation[6*state->cols + 12] = 1;
-        // state->current_generation[7*state->cols + 10] = 1;
-        // state->current_generation[7*state->cols + 11] = 1;
-        // state->current_generation[7*state->cols + 12] = 1;
-
         // setup shapes
 
         // 1. single point
