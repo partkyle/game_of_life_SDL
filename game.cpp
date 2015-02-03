@@ -8,6 +8,19 @@
 
 #define BOARD_SIZE 500
 
+#define NUM_SHAPES 5
+
+typedef struct v2
+{
+    real32 x, y;
+} v2;
+
+typedef struct shape
+{
+    v2 shapes[20];
+    uint32 count;
+} shape;
+
 typedef struct game_state
 {
     memory_arena arena;
@@ -28,6 +41,10 @@ typedef struct game_state
     int32 framerate;
 
     bool32 paused;
+
+    shape saved_shapes[NUM_SHAPES];
+    uint32 current_saved_shape;
+    uint32 total_shapes;
 
     uint64 total_time;
 } game_state;
@@ -151,17 +168,68 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         state->cell_height = 30.0f;
 
         // glider
-        state->current_generation[0*state->cols + 1] = 1;
-        state->current_generation[1*state->cols + 2] = 1;
-        state->current_generation[2*state->cols + 0] = 1;
-        state->current_generation[2*state->cols + 1] = 1;
-        state->current_generation[2*state->cols + 2] = 1;
+        // state->current_generation[0*state->cols + 1] = 1;
+        // state->current_generation[1*state->cols + 2] = 1;
+        // state->current_generation[2*state->cols + 0] = 1;
+        // state->current_generation[2*state->cols + 1] = 1;
+        // state->current_generation[2*state->cols + 2] = 1;
 
-        state->current_generation[5*state->cols + 11] = 1;
-        state->current_generation[6*state->cols + 12] = 1;
-        state->current_generation[7*state->cols + 10] = 1;
-        state->current_generation[7*state->cols + 11] = 1;
-        state->current_generation[7*state->cols + 12] = 1;
+        // state->current_generation[5*state->cols + 11] = 1;
+        // state->current_generation[6*state->cols + 12] = 1;
+        // state->current_generation[7*state->cols + 10] = 1;
+        // state->current_generation[7*state->cols + 11] = 1;
+        // state->current_generation[7*state->cols + 12] = 1;
+
+        // setup shapes
+
+        // 1. single point
+        {
+            uint32 *count = &state->saved_shapes[state->total_shapes].count;
+
+            state->saved_shapes[state->total_shapes].count = 1;
+            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {0, 0};
+
+            ++state->total_shapes;
+        }
+
+        // 2. Line
+        {
+            uint32 *count = &state->saved_shapes[state->total_shapes].count;
+
+            state->saved_shapes[state->total_shapes].count = 1;
+            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {0, -1};
+            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {0, 0};
+            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {0, 1};
+
+            ++state->total_shapes;
+        }
+
+        // 3. flower
+        {
+            uint32 *count = &state->saved_shapes[state->total_shapes].count;
+
+            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {0, -1};
+            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {-1, 0};
+            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {-1, 1};
+            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {0, 2};
+            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {1, 1};
+            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {1, 0};
+
+            ++state->total_shapes;
+        }
+
+        // 4. glider
+        {
+            uint32 *count = &state->saved_shapes[state->total_shapes].count;
+
+            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {0, 0};
+            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {1, 1};
+            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {1, 2};
+            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {0, 2};
+            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {-1, 2};
+
+            ++state->total_shapes;
+        }
 
         state->framecount = 0;
         state->framerate = 5;
@@ -172,12 +240,14 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         ++i)
     {
         game_controller_input *controller = &input->controllers[i];
-        if(controller->back.ended_down)
+        if(controller->back.ended_down && controller->back.half_transition_count == 1)
         {
-            if (controller->back.half_transition_count == 1)
-            {
-                state->paused = !state->paused;
-            }
+            state->paused = !state->paused;
+        }
+
+        if(controller->start.ended_down && controller->start.half_transition_count == 1)
+        {
+            ++state->current_saved_shape;
         }
 
         if(controller->action_up.ended_down)
@@ -236,15 +306,20 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     int32 mouse_x = (int32)((input->mouse_x + state->camera_x) / state->cell_width);
     int32 mouse_y = (int32)((input->mouse_y + state->camera_y) / state->cell_height);
 
+    shape current_shape = state->saved_shapes[state->current_saved_shape%state->total_shapes];
+
     if(input->MouseLeft.ended_down)
     {
-        if(mouse_x >= 0 &&
-           mouse_x < state->cols &&
-           mouse_y >= 0 &&
-           mouse_y < state->rows)
+        for(int i=0;
+            i < current_shape.count;
+            ++i)
         {
+            int32 cell_x = constrain(mouse_x + current_shape.shapes[i].x, BOARD_SIZE);
+            int32 cell_y = constrain(mouse_y + current_shape.shapes[i].y, BOARD_SIZE);
+
             set_board_value(state->current_generation, state->rows, state->cols,
-                            mouse_x, mouse_y, 1);
+                            cell_x, cell_y, 1);
+
         }
     }
 
@@ -331,14 +406,30 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             }
 #endif
         }
-
-        // NOTE(partkyle): draw mouse position
+#if 0
+        real32 offset_x = 0;
+        real32 offset_y = 0;
         draw_rectangle(buffer,
-                       mouse_x*state->cell_width - state->camera_x, mouse_y*state->cell_height - state->camera_y,
+                       offset_x + mouse_x*state->cell_width - state->camera_x, offset_y + mouse_y*state->cell_height - state->camera_y,
                        state->cell_width, state->cell_height,
                        1.0f, 1.0f, 0.0f);
 
+#else
+        for(int i=0;
+            i < current_shape.count;
+            ++i)
+        {
+            real32 offset_x = current_shape.shapes[i].x * state->cell_width;
+            real32 offset_y = current_shape.shapes[i].y * state->cell_height;
+
+            // NOTE(partkyle): draw mouse position
+            draw_rectangle(buffer,
+                           offset_x + mouse_x*state->cell_width - state->camera_x, offset_y + mouse_y*state->cell_height - state->camera_y,
+                           state->cell_width, state->cell_height,
+                           1.0f, 1.0f, 0.0f);
+        }
     }
+#endif
 
     return(0);
 }
