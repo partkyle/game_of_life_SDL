@@ -24,6 +24,11 @@ typedef struct game_state
     real32 camera_x;
     real32 camera_y;
 
+    real32 min_camera_x;
+    real32 max_camera_x;
+    real32 min_camera_y;
+    real32 max_camera_y;
+
     int32 framecount;
     int32 framerate;
 
@@ -156,6 +161,11 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         state->framerate = 5;
     }
 
+    real32 min_camera_x = 0;
+    real32 max_camera_x = state->rows*state->cell_width - buffer->width;
+    real32 min_camera_y = 0;
+    real32 max_camera_y = state->rows*state->cell_height - buffer->height;
+
     for(int i = 0;
         i < array_count(input->controllers);
         ++i)
@@ -175,40 +185,40 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         {
             state->camera_y -= 15.0f;
 
-            // if(state->camera_y < -bound_y)
-            // {
-            //     state->camera_y = bound_y;
-            // }
+            if(state->camera_y < min_camera_y)
+            {
+                state->camera_y = min_camera_y;
+            }
         }
 
         if(controller->move_down.ended_down)
         {
             state->camera_y += 15.0f;
 
-            // if(state->camera_y > bound_y)
-            // {
-            //     state->camera_y = bound_y;
-            // }
+            if(state->camera_y > max_camera_y)
+            {
+                state->camera_y = max_camera_y;
+            }
         }
 
         if(controller->move_left.ended_down)
         {
             state->camera_x -= 15.0f;
 
-            // if(state->camera_x < -bound_x)
-            // {
-            //     state->camera_x = -bound_x;
-            // }
+            if(state->camera_x < min_camera_x)
+            {
+                state->camera_x = min_camera_x;
+            }
         }
 
         if(controller->move_right.ended_down)
         {
             state->camera_x += 15.0f;
 
-            // if(state->camera_x > bound_x)
-            // {
-            //     state->camera_x = bound_x;
-            // }
+            if(state->camera_x > max_camera_x)
+            {
+                state->camera_x = max_camera_x;
+            }
         }
     }
 
@@ -295,7 +305,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                                      state->cell_width-1, state->cell_height-1,
                                      r, g, b, alpha_value);
             }
-
+#if 0
             // prev gen dots
             int32 prev_cell = get_board_value(state->prev_generation,
                                               state->rows, state->cols,
@@ -311,6 +321,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                                1, 1,
                                r, g, b);
             }
+#endif
         }
     }
 
