@@ -3,6 +3,12 @@
 #include "common.h"
 #include "sdl_platform.h"
 
+// TODO(partkyle): remove these global variables
+//     they are only used for fullscreen
+global_variable SDL_Window *window;
+global_variable bool32 is_fullscreen = false;
+global_variable sdl_offscreen_buffer *global_buffer;
+
 internal void
 SDL_process_keyboard_control(game_button_state *new_state, bool32 is_down)
 {
@@ -14,9 +20,33 @@ SDL_process_keyboard_control(game_button_state *new_state, bool32 is_down)
 }
 
 internal void
-SDL_process_keyboard_message(SDL_Keysym keysym, game_controller_input *controller, bool32 is_down)
+SDL_toggle_fullscreen()
 {
-    switch(keysym.sym)
+    is_fullscreen = !is_fullscreen;
+    if(is_fullscreen)
+    {
+        SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    }
+    else
+    {
+        SDL_SetWindowFullscreen(window, 0);
+    }
+}
+
+sdl_window_dimension
+SDL_get_window_dimension(SDL_Window *Window)
+{
+    sdl_window_dimension result;
+
+    SDL_GetWindowSize(Window, &result.width, &result.height);
+
+    return(result);
+}
+
+internal void
+SDL_process_keyboard_message(SDL_Event *event, game_controller_input *controller, bool32 is_down)
+{
+    switch(event->key.keysym.sym)
     {
         case SDLK_w:
         {
@@ -67,6 +97,16 @@ SDL_process_keyboard_message(SDL_Keysym keysym, game_controller_input *controlle
         {
             SDL_process_keyboard_control(&controller->back, is_down);
         } break;
+
+        // TODO(partkyle): find a better way to handle platform vs game input
+        //     should there even be a difference?
+        case SDLK_f:
+        {
+            if(is_down && !event->key.repeat)
+            {
+                SDL_toggle_fullscreen();
+            }
+        } break;
     }
 }
 
@@ -83,18 +123,27 @@ handle_event(SDL_Event *event, game_input *input)
 
         case SDL_KEYDOWN:
         {
-            SDL_process_keyboard_message(event->key.keysym, &input->controllers[0], true);
+            SDL_process_keyboard_message(event, &input->controllers[0], true);
         } break;
 
         case SDL_KEYUP:
         {
-            SDL_process_keyboard_message(event->key.keysym, &input->controllers[0], false);
+            SDL_process_keyboard_message(event, &input->controllers[0], false);
         } break;
 
         case SDL_MOUSEMOTION:
         {
-            input->mouse_x = event->motion.x;
-            input->mouse_y = event->motion.y;
+            if(is_fullscreen)
+            {
+                sdl_window_dimension dim = SDL_get_window_dimension(window);
+                input->mouse_x = event->motion.x * ((real32)global_buffer->game_buffer->width / (real32)dim.width);
+                input->mouse_y = event->motion.y * ((real32)global_buffer->game_buffer->height / (real32)dim.height);
+            }
+            else
+            {
+                input->mouse_x = event->motion.x;
+                input->mouse_y = event->motion.y;
+            }
             // TODO(partkyle): test this relative motion out, it might still be broken
             //     since moving it in the SDL_PollEvent loop
             input->rel_mouse_x = event->motion.xrel;
@@ -194,16 +243,6 @@ SDL_resize_texture(sdl_offscreen_buffer *buffer, SDL_Renderer *renderer, int32 w
                           );
 }
 
-sdl_window_dimension
-SDL_get_window_dimension(SDL_Window *Window)
-{
-    sdl_window_dimension result;
-
-    SDL_GetWindowSize(Window, &result.width, &result.height);
-
-    return(result);
-}
-
 internal platform_dynamic_game
 SDL_dynamic_platform_game(char *dll_filename)
 {
@@ -226,7 +265,7 @@ main(int argc, char *arg[])
     }
 
     // create a window
-    SDL_Window *window = SDL_CreateWindow("@partkyle SDL Platform",   // window title
+    window = SDL_CreateWindow("@partkyle SDL Platform",   // window title
                                           SDL_WINDOWPOS_CENTERED,     // x position, centered
                                           SDL_WINDOWPOS_CENTERED,     // y position, centered
                                           1920 / 2,                   // width, in pixels
@@ -241,6 +280,7 @@ main(int argc, char *arg[])
                                                     SDL_RENDERER_PRESENTVSYNC);
 
         sdl_offscreen_buffer buffer = {};
+        global_buffer = &buffer;
 
         game_offscreen_buffer game_buffer = {};
         buffer.game_buffer = &game_buffer;
