@@ -172,12 +172,10 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         game_controller_input *controller = &input->controllers[i];
         if(controller->back.ended_down)
         {
-            state->paused = true;
-        }
-
-        if(controller->start.ended_down)
-        {
-            state->paused = false;
+            if (controller->back.half_transition_count == 1)
+            {
+                state->paused = !state->paused;
+            }
         }
 
         if(controller->action_up.ended_down)

@@ -165,11 +165,15 @@ handle_event(SDL_Event *event, game_input *input)
             // TODO(partkyle): find a better way to handle the mouse click bug
             //      this is only slightly better, since it still requires another click
             //      in the frame to behave normal again.
-            if(input->mouse_x > 0 && input->mouse_y > 0)
+            if(input->mouse_x > 0 &&
+               input->mouse_y > 0 &&
+               input->mouse_x < global_buffer->game_buffer->width &&
+               input->mouse_y < global_buffer->game_buffer->height)
             {
                 switch(event->button.button)
                 {
                     case SDL_BUTTON_LEFT:
+
                     {
                         SDL_process_keyboard_control(&input->MouseLeft, event->button.type == SDL_MOUSEBUTTONDOWN);
                     } break;
@@ -325,7 +329,7 @@ main(int argc, char *arg[])
 
             while(Running)
             {
-                // TODO(partkyle): clean up input clearing code, too many bugs
+                memset(current_input, 0, sizeof(game_input));
 
                 // NOTE(partkyle): copy old input over to handle the appropriate ended_down state
                 for(int controller_index = 0;
@@ -343,7 +347,7 @@ main(int argc, char *arg[])
                     }
                 }
 
-                // NOTE(partkyle): clear out mouse state
+                // NOTE(partkyle): copy old input over to handle the appropriate ended_down state
                 for(int i = 0;
                     i < array_count(current_input->mouse_buttons);
                     ++i)
@@ -353,11 +357,6 @@ main(int argc, char *arg[])
 
                 current_input->t = time(0);
                 current_input->dtForFrame = 1000.0f*(current_input->t - last_input->t);
-
-                current_input->rel_mouse_x = 0;
-                current_input->rel_mouse_y = 0;
-
-                current_input->mouse_z = 0;
 
                 Running = SDL_process_pending_messages(current_input);
 
