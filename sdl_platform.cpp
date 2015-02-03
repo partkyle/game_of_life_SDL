@@ -38,6 +38,26 @@ SDL_process_keyboard_message(SDL_Keysym keysym, game_controller_input *controlle
             SDL_process_keyboard_control(&controller->move_right, is_down);
         } break;
 
+        case SDLK_UP:
+        {
+            SDL_process_keyboard_control(&controller->action_up, is_down);
+        } break;
+
+        case SDLK_DOWN:
+        {
+            SDL_process_keyboard_control(&controller->action_down, is_down);
+        } break;
+
+        case SDLK_LEFT:
+        {
+            SDL_process_keyboard_control(&controller->action_left, is_down);
+        } break;
+
+        case SDLK_RIGHT:
+        {
+            SDL_process_keyboard_control(&controller->action_right, is_down);
+        } break;
+
         case SDLK_SPACE:
         {
             SDL_process_keyboard_control(&controller->start, is_down);

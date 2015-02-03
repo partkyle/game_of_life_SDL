@@ -6,7 +6,7 @@
 #define MIN_FRAMERATE 0
 #define MAX_FRAMERATE 30
 
-#define BOARD_SIZE 100
+#define BOARD_SIZE 500
 
 typedef struct game_state
 {
@@ -122,6 +122,18 @@ draw_rectangle(game_offscreen_buffer *buffer,
                          r, g, b, 1.0f);
 }
 
+internal void
+constrain_camera(game_state *state, game_offscreen_buffer *buffer)
+{
+    real32 min_camera_x = 0;
+    real32 max_camera_x = state->rows*state->cell_width - buffer->width;
+    real32 min_camera_y = 0;
+    real32 max_camera_y = state->rows*state->cell_height - buffer->height;
+
+    state->camera_x = MIN(MAX(state->camera_x, min_camera_x), max_camera_x);
+    state->camera_y = MIN(MAX(state->camera_y, min_camera_y), max_camera_y);
+}
+
 extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 {
     assert(sizeof(game_state) <= memory->permanent_storage_size);
@@ -141,9 +153,6 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         state->cell_width = 30.0f;
         state->cell_height = 30.0f;
 
-        // state->camera_x = bound_x;
-        // state->camera_y = bound_y;
-
         // glider
         state->current_generation[0*state->cols + 1] = 1;
         state->current_generation[1*state->cols + 2] = 1;
@@ -161,11 +170,6 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         state->framerate = 5;
     }
 
-    real32 min_camera_x = 0;
-    real32 max_camera_x = state->rows*state->cell_width - buffer->width;
-    real32 min_camera_y = 0;
-    real32 max_camera_y = state->rows*state->cell_height - buffer->height;
-
     for(int i = 0;
         i < array_count(input->controllers);
         ++i)
@@ -181,46 +185,38 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             state->paused = false;
         }
 
+        if(controller->action_up.ended_down)
+        {
+            state->framerate = MAX(state->framerate-1, MIN_FRAMERATE);
+        }
+
+        if(controller->action_down.ended_down)
+        {
+            state->framerate = MIN(state->framerate+1, MAX_FRAMERATE);
+        }
+
         if(controller->move_up.ended_down)
         {
             state->camera_y -= 15.0f;
-
-            if(state->camera_y < min_camera_y)
-            {
-                state->camera_y = min_camera_y;
-            }
         }
 
         if(controller->move_down.ended_down)
         {
             state->camera_y += 15.0f;
-
-            if(state->camera_y > max_camera_y)
-            {
-                state->camera_y = max_camera_y;
-            }
         }
 
         if(controller->move_left.ended_down)
         {
             state->camera_x -= 15.0f;
-
-            if(state->camera_x < min_camera_x)
-            {
-                state->camera_x = min_camera_x;
-            }
         }
 
         if(controller->move_right.ended_down)
         {
             state->camera_x += 15.0f;
-
-            if(state->camera_x > max_camera_x)
-            {
-                state->camera_x = max_camera_x;
-            }
         }
     }
+
+    constrain_camera(state, buffer);
 
     int32 mouse_x = (int32)((input->mouse_x + state->camera_x) / state->cell_width);
     int32 mouse_y = (int32)((input->mouse_y + state->camera_y) / state->cell_height);
@@ -237,16 +233,9 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         }
     }
 
-    // update framerate from the mouse wheel
-    state->framerate -= input->mouse_z;
-    if(state->framerate < MIN_FRAMERATE)
-    {
-        state->framerate = MIN_FRAMERATE;
-    }
-    if(state->framerate > MAX_FRAMERATE)
-    {
-        state->framerate = MAX_FRAMERATE;
-    }
+    // NOTE(partkyle): update size based on mouse wheel
+    state->cell_height = MAX(state->cell_height + input->mouse_z, 2);
+    state->cell_width = MAX(state->cell_width + input->mouse_z, 2);
 
     if(!state->paused)
     {
@@ -280,16 +269,18 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             real32 cell_pos_x = x*state->cell_width - state->camera_x;
             real32 cell_pos_y = y*state->cell_height - state->camera_y;
 
+#if 0
             // grid lines
             draw_rectangle(buffer,
                            cell_pos_x, cell_pos_y,
                            state->cell_width, state->cell_height,
                            0.5f, 0.5f, 0.5f);
+#endif
 
             // dead cells by default (used for alpha)
             draw_rectangle(buffer,
-                           1+cell_pos_x, 1+cell_pos_y,
-                           state->cell_width-1, state->cell_height-1,
+                           cell_pos_x, cell_pos_y,
+                           state->cell_width, state->cell_height,
                            0.0f, 0.0f, 0.0f);
 
 
