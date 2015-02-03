@@ -257,7 +257,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     if(state->paused)
     {
         state->total_time += 1;
-        alpha_value = 0.5f*((real32)sin((real32)state->total_time / 50.0f) + 1.0f);
+        alpha_value = MIN(0.33f*((real32)sin((real32)state->total_time / 25.0f) + 1.0f) + 0.25f, 1.0f);
     }
 
     for (int y = 0; y < BOARD_SIZE; ++y)
