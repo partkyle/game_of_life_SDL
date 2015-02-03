@@ -219,6 +219,12 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         }
     }
 
+    if(input->MouseMiddle.ended_down)
+    {
+        state->camera_x += input->rel_mouse_x;
+        state->camera_y += input->rel_mouse_y;
+    }
+
     // NOTE(partkyle): update size based on mouse wheel
     state->cell_height = MAX(state->cell_height + input->mouse_z, 2);
     state->cell_width = MAX(state->cell_width + input->mouse_z, 2);
@@ -278,13 +284,19 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                            cell_pos_x, cell_pos_y,
                            state->cell_width, state->cell_height,
                            0.5f, 0.5f, 0.5f);
-#endif
 
+            // dead cells by default (used for alpha)
+            draw_rectangle(buffer,
+                           1+cell_pos_x, 1+cell_pos_y,
+                           -1+state->cell_width, -1+state->cell_height,
+                           0.0f, 0.0f, 0.0f);
+#else
             // dead cells by default (used for alpha)
             draw_rectangle(buffer,
                            cell_pos_x, cell_pos_y,
                            state->cell_width, state->cell_height,
                            0.0f, 0.0f, 0.0f);
+#endif
 
 
             if(cell)

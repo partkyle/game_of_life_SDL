@@ -162,22 +162,20 @@ handle_event(SDL_Event *event, game_input *input)
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP:
         {
-            // TODO(partkyle): find a better way to handle the mouse click bug
-            //      this is only slightly better, since it still requires another click
-            //      in the frame to behave normal again.
-            if(input->mouse_x > 0 &&
-               input->mouse_y > 0 &&
-               input->mouse_x < global_buffer->game_buffer->width &&
-               input->mouse_y < global_buffer->game_buffer->height)
+            // NOTE(partkyle): the mouse bug may still exist in OSX, but it seems fixed on windows
+            //     there are issues with the mouse getting held down since the mouseUP only worked
+            //     within the window as well
+            switch(event->button.button)
             {
-                switch(event->button.button)
+                case SDL_BUTTON_LEFT:
                 {
-                    case SDL_BUTTON_LEFT:
+                    SDL_process_keyboard_control(&input->MouseLeft, event->button.type == SDL_MOUSEBUTTONDOWN);
+                } break;
 
-                    {
-                        SDL_process_keyboard_control(&input->MouseLeft, event->button.type == SDL_MOUSEBUTTONDOWN);
-                    } break;
-                }
+                case SDL_BUTTON_MIDDLE:
+                {
+                    SDL_process_keyboard_control(&input->MouseMiddle, event->button.type == SDL_MOUSEBUTTONDOWN);
+                } break;
             }
         } break;
 
