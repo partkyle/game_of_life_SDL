@@ -347,9 +347,13 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         alpha_value = MIN(0.33f*((real32)sin((real32)state->total_time / 25.0f) + 1.0f) + 0.25f, 1.0f);
     }
 
-    for (int y = 0; y < state->rows; ++y)
+    for (int y = MAX(0, (int32)((state->camera_y - state->cell_height) / state->cell_height));
+         y < MIN(state->rows, (int32)((state->camera_y + buffer->height + state->cell_height) / state->cell_height));
+         ++y)
     {
-        for (int x = 0; x < state->cols; ++x)
+        for (int x =  MAX(0, (int32)((state->camera_x - state->cell_width) / state->cell_width));
+             x < MIN(state->cols, (int32)((state->camera_x + buffer->width + state->cell_width) / state->cell_width));
+             ++x)
         {
             int32 cell = get_board_value(state->current_generation, state->rows, state->cols, x, y);
 
