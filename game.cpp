@@ -6,7 +6,8 @@
 #define MIN_FRAMERATE 0
 #define MAX_FRAMERATE 60
 
-#define BOARD_SIZE 500
+#define BOARD_COLS 1920/2/2
+#define BOARD_ROWS 1080/2/2
 
 #define NUM_SHAPES 5
 
@@ -25,8 +26,8 @@ typedef struct game_state
 {
     memory_arena arena;
 
-    int32 current_generation[BOARD_SIZE*BOARD_SIZE];
-    int32 prev_generation[BOARD_SIZE*BOARD_SIZE];
+    int32 current_generation[BOARD_ROWS*BOARD_COLS];
+    int32 prev_generation[BOARD_ROWS*BOARD_COLS];
 
     int32 rows;
     int32 cols;
@@ -140,7 +141,7 @@ internal void
 constrain_camera(game_state *state, game_offscreen_buffer *buffer)
 {
     real32 min_camera_x = 0;
-    real32 max_camera_x = state->rows*state->cell_width - buffer->width;
+    real32 max_camera_x = state->cols*state->cell_width - buffer->width;
     real32 min_camera_y = 0;
     real32 max_camera_y = state->rows*state->cell_height - buffer->height;
 
@@ -161,8 +162,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         initialize_arena(&state->arena, memory->permanent_storage_size - sizeof(game_state),
         (uint8 *)memory->permanent_storage + sizeof(game_state));
 
-        state->rows = BOARD_SIZE;
-        state->cols = BOARD_SIZE;
+        state->rows = BOARD_ROWS;
+        state->cols = BOARD_COLS;
 
         state->cell_width = 30.0f;
         state->cell_height = 30.0f;
@@ -314,8 +315,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             i < current_shape.count;
             ++i)
         {
-            int32 cell_x = constrain(mouse_x + current_shape.shapes[i].x, BOARD_SIZE);
-            int32 cell_y = constrain(mouse_y + current_shape.shapes[i].y, BOARD_SIZE);
+            int32 cell_x = constrain(mouse_x + current_shape.shapes[i].x, BOARD_COLS);
+            int32 cell_y = constrain(mouse_y + current_shape.shapes[i].y, BOARD_ROWS);
 
             set_board_value(state->current_generation, state->rows, state->cols,
                             cell_x, cell_y, 1);
@@ -346,9 +347,9 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         alpha_value = MIN(0.33f*((real32)sin((real32)state->total_time / 25.0f) + 1.0f) + 0.25f, 1.0f);
     }
 
-    for (int y = 0; y < BOARD_SIZE; ++y)
+    for (int y = 0; y < state->rows; ++y)
     {
-        for (int x = 0; x < BOARD_SIZE; ++x)
+        for (int x = 0; x < state->cols; ++x)
         {
             int32 cell = get_board_value(state->current_generation, state->rows, state->cols, x, y);
 
