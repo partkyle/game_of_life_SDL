@@ -221,6 +221,10 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         }
     }
 
+    // NOTE(partkyle): update size based on mouse wheel
+    state->cell_height = MAX(state->cell_height + input->mouse_z, 2);
+    state->cell_width = MAX(state->cell_width + input->mouse_z, 2);
+
     constrain_camera(state, buffer);
 
     int32 mouse_x = (int32)((input->mouse_x + state->camera_x) / state->cell_width);
@@ -237,10 +241,6 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
                             mouse_x, mouse_y, 1);
         }
     }
-
-    // NOTE(partkyle): update size based on mouse wheel
-    state->cell_height = MAX(state->cell_height + input->mouse_z, 2);
-    state->cell_width = MAX(state->cell_width + input->mouse_z, 2);
 
     if(!state->paused)
     {
