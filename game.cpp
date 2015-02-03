@@ -329,6 +329,13 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             }
 #endif
         }
+
+        // NOTE(partkyle): draw mouse position
+        draw_rectangle(buffer,
+                       mouse_x*state->cell_width - state->camera_x, mouse_y*state->cell_height - state->camera_y,
+                       state->cell_width, state->cell_height,
+                       1.0f, 0.0f, 1.0f);
+
     }
 
     return(0);

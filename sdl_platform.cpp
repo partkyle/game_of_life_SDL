@@ -135,26 +135,6 @@ handle_event(SDL_Event *event, game_input *input)
             SDL_process_keyboard_message(event, &input->controllers[0], false);
         } break;
 
-        case SDL_MOUSEMOTION:
-        {
-            if(is_fullscreen)
-            {
-                sdl_window_dimension dim = SDL_get_window_dimension(window);
-                input->mouse_x = event->motion.x * ((real32)global_buffer->game_buffer->width / (real32)dim.width);
-                input->mouse_y = event->motion.y * ((real32)global_buffer->game_buffer->height / (real32)dim.height);
-            }
-            else
-            {
-                input->mouse_x = event->motion.x;
-                input->mouse_y = event->motion.y;
-            }
-            // TODO(partkyle): test this relative motion out, it might still be broken
-            //     since moving it in the SDL_PollEvent loop
-            input->rel_mouse_x = event->motion.xrel;
-            input->rel_mouse_y = event->motion.yrel;
-        } break;
-
-        // TODO(partkyle): figure out if I want a click coordinate
         // TODO(partkyle): this supports double and triple clicks
         //     that could be useful.
         // TODO(partkyle): there is a mouse button issue when clicking the titlebar:
@@ -353,10 +333,33 @@ main(int argc, char *arg[])
                     current_input->mouse_buttons[i].ended_down = last_input->mouse_buttons[i].ended_down;
                 }
 
+                Running = SDL_process_pending_messages(current_input);
+
                 current_input->t = time(0);
                 current_input->dtForFrame = 1000.0f*(current_input->t - last_input->t);
 
-                Running = SDL_process_pending_messages(current_input);
+                // NOTE(partkyle): get mouse_rel from previous frame
+                current_input->rel_mouse_x = last_input->rel_mouse_x;
+                current_input->rel_mouse_y = last_input->rel_mouse_y;
+                SDL_GetRelativeMouseState(&current_input->rel_mouse_x, &current_input->rel_mouse_y);
+
+                // NOTE(partkyle): we want the immediate mouse position
+                //     It might be possible to copy the last frames position instead
+                // NOTE(partkyle): we don't care about the buttons result as that is
+                //     handled in the event loop
+                SDL_GetMouseState(&current_input->mouse_x, &current_input->mouse_y);
+
+                if(is_fullscreen)
+                {
+                    sdl_window_dimension dim = SDL_get_window_dimension(window);
+                    current_input->mouse_x = current_input->mouse_x * ((real32)global_buffer->game_buffer->width / (real32)dim.width);
+                    current_input->mouse_y = current_input->mouse_y * ((real32)global_buffer->game_buffer->height / (real32)dim.height);
+                }
+                else
+                {
+                    current_input->mouse_x = current_input->mouse_x;
+                    current_input->mouse_y = current_input->mouse_y;
+                }
 
                 SDL_load_game_code(&dynamic_game, &code);
 
