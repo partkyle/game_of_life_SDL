@@ -8,7 +8,6 @@
 // TODO(partkyle): handle game.h import here
 typedef struct sdl_offscreen_buffer
 {
-    // NOTE(casey): Pixels are alwasy 32-bits wide, Memory Order BB GG RR XX
     SDL_Texture *texture;
 
     game_offscreen_buffer *game_buffer;
