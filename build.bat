@@ -1,6 +1,9 @@
 @echo off
 
+if not exist "build" mkdir build
 pushd build
+if not exist "data" mkdir data
+cp ../data/* data
 echo WAITING FOR PDB > game.dll.lock
 cl -nologo  -Z7 -Gm- -GR- -EHa- -EHsc -Od -Oi -FC -fp:fast ..\game.cpp -Fmgame.map -LD -link -incremental:no -PDB:game_%random%.pdb -EXPORT:GameUpdateAndRender
 del game.dll.lock

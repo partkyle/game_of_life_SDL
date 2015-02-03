@@ -9,6 +9,10 @@ global_variable SDL_Window *window;
 global_variable bool32 is_fullscreen = false;
 global_variable sdl_offscreen_buffer *global_buffer;
 
+#ifndef ICON_LOCATION
+#define ICON_LOCATION "data/icon32x32.bmp"
+#endif
+
 internal void
 SDL_process_keyboard_control(game_button_state *new_state, bool32 is_down)
 {
@@ -255,6 +259,14 @@ SDL_load_game_code(platform_dynamic_game *game, game_code *code)
       platform_load_game_code(game, code);
 }
 
+internal void
+SDL_set_icon()
+{
+    SDL_Surface *image = SDL_LoadBMP(ICON_LOCATION);
+
+    SDL_SetWindowIcon(window, image);
+}
+
 int
 main(int argc, char *arg[])
 {
@@ -273,6 +285,7 @@ main(int argc, char *arg[])
                                           SDL_WINDOW_OPENGL           // flags
                                           );
 
+    SDL_set_icon();
     if(window)
     {
         SDL_Renderer *renderer = SDL_CreateRenderer(window,
