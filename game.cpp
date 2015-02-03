@@ -6,12 +6,14 @@
 #define MIN_FRAMERATE 0
 #define MAX_FRAMERATE 30
 
+#define BOARD_SIZE 100
+
 typedef struct game_state
 {
     memory_arena arena;
 
-    int32 *current_generation;
-    int32 *prev_generation;
+    int32 current_generation[BOARD_SIZE*BOARD_SIZE];
+    int32 prev_generation[BOARD_SIZE*BOARD_SIZE];
 
     int32 rows;
     int32 cols;
@@ -111,6 +113,8 @@ draw_rectangle(game_offscreen_buffer *buffer,
 
 extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 {
+    assert(sizeof(game_state) <= memory->permanent_storage_size);
+
     game_state *state = (game_state *)memory->permanent_storage;
 
     if(!memory->is_initialized)
@@ -120,11 +124,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         initialize_arena(&state->arena, memory->permanent_storage_size - sizeof(game_state),
         (uint8 *)memory->permanent_storage + sizeof(game_state));
 
-        state->rows = 9*5;
-        state->cols = 16*5;
-
-        state->current_generation = push_array(&state->arena, state->rows * state->cols, int32);
-        state->prev_generation = push_array(&state->arena, state->rows * state->cols, int32);
+        state->rows = 9;
+        state->cols = 16;
 
         // glider
         state->current_generation[0*state->cols + 1] = 1;
@@ -168,7 +169,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     if(input->MouseLeft.ended_down)
     {
         set_board_value(state->current_generation, state->rows, state->cols,
-        mouse_x, mouse_y, 1);
+                        mouse_x, mouse_y, 1);
     }
 
     // update framerate from the mouse wheel
@@ -188,7 +189,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         {
             state->framecount = 0;
 
-            swap(int32 *, state->current_generation, state->prev_generation);
+            swap(state->current_generation, state->prev_generation);
 
             next_generation(state->current_generation, state->prev_generation, state->rows, state->cols);
         }

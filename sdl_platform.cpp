@@ -237,7 +237,7 @@ main(int argc, char *arg[])
             game_input *last_input = &input[1];
 
             game_memory memory = {};
-            memory.permanent_storage_size = MB(64);
+            memory.permanent_storage_size = MB(256);
             memory.transient_storage_size = GB(1);
             void *memory_block = malloc(memory.permanent_storage_size + memory.transient_storage_size);
 
@@ -292,7 +292,7 @@ main(int argc, char *arg[])
 
                 SDL_update_window(window, renderer, &buffer);
 
-                swap(game_input *, current_input, last_input);
+                swap(current_input, last_input);
             }
         }
     }
