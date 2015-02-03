@@ -4,7 +4,7 @@
 #include <math.h>
 
 #define MIN_FRAMERATE 0
-#define MAX_FRAMERATE 30
+#define MAX_FRAMERATE 60
 
 #define BOARD_SIZE 500
 
@@ -23,11 +23,6 @@ typedef struct game_state
 
     real32 camera_x;
     real32 camera_y;
-
-    real32 min_camera_x;
-    real32 max_camera_x;
-    real32 min_camera_y;
-    real32 max_camera_y;
 
     int32 framecount;
     int32 framerate;
