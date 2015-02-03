@@ -252,11 +252,11 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     // DEBUG layer to show edges
     draw_rectangle(buffer, 0, 0, buffer->width, buffer->height, 1.0f, 0.0f, 1.0f);
 
-    state->total_time += 1;
 
     real32 alpha_value = 1.0f;
     if(state->paused)
     {
+        state->total_time += 1;
         alpha_value = 0.5f*((real32)sin((real32)state->total_time / 50.0f) + 1.0f);
     }
 
