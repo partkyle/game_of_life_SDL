@@ -424,12 +424,12 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             i < current_shape.count;
             ++i)
         {
-            real32 offset_x = current_shape.shapes[i].x * state->cell_width;
-            real32 offset_y = current_shape.shapes[i].y * state->cell_height;
+            int32 cell_x = constrain(mouse_x + current_shape.shapes[i].x, BOARD_COLS);
+            int32 cell_y = constrain(mouse_y + current_shape.shapes[i].y, BOARD_ROWS);
 
             // NOTE(partkyle): draw mouse position
             draw_rectangle(buffer,
-                           offset_x + mouse_x*state->cell_width - state->camera_x, offset_y + mouse_y*state->cell_height - state->camera_y,
+                           cell_x*state->cell_width - state->camera_x, cell_y*state->cell_height - state->camera_y,
                            state->cell_width, state->cell_height,
                            1.0f, 1.0f, 0.0f);
         }
