@@ -78,6 +78,8 @@ draw_rectangle_alpha(game_offscreen_buffer *buffer,
                  min_x*buffer->bytes_per_pixel +
                  min_y*buffer->pitch);
 
+    real32 a_inverse = (1.0f - a);
+
     for(int iterY = min_y;
         iterY < max_y;
        ++iterY)
@@ -91,9 +93,9 @@ draw_rectangle_alpha(game_offscreen_buffer *buffer,
             real32 dest_g = (real32)((*pixel >>  8) & 0xFF);
             real32 dest_b = (real32)((*pixel >>  0) & 0xFF);
 
-            real32 new_r = (1.0f - a)*dest_r + a*r;
-            real32 new_g = (1.0f - a)*dest_g + a*g;
-            real32 new_b = (1.0f - a)*dest_b + a*b;
+            real32 new_r = a_inverse*dest_r + a*r;
+            real32 new_g = a_inverse*dest_g + a*g;
+            real32 new_b = a_inverse*dest_b + a*b;
 
             uint32 color = ((round_real32_to_uint32(new_r * 255.0f) << 16) |
                             (round_real32_to_uint32(new_g * 255.0f) << 8) |
@@ -334,7 +336,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         draw_rectangle(buffer,
                        mouse_x*state->cell_width - state->camera_x, mouse_y*state->cell_height - state->camera_y,
                        state->cell_width, state->cell_height,
-                       1.0f, 0.0f, 1.0f);
+                       1.0f, 1.0f, 0.0f);
 
     }
 
