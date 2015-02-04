@@ -22,6 +22,40 @@ typedef struct shape
     uint32 count;
 } shape;
 
+typedef struct shape_bag
+{
+    shape shapes[NUM_SHAPES];
+    uint32 current_shape;
+    uint32 total_shapes;
+} shape_bag;
+
+internal shape*
+get_current_shape(shape_bag *bag)
+{
+    assert(bag->current_shape < bag->total_shapes);
+    return bag->shapes + bag->current_shape;
+}
+
+internal void
+advance_shape(shape_bag *bag)
+{
+    bag->current_shape = (bag->current_shape + 1) % bag->total_shapes;
+}
+
+internal shape *
+add_shape(shape_bag *bag)
+{
+    return &bag->shapes[bag->total_shapes++];
+}
+
+internal void
+add_point_to_shape(shape *s, real32 x, real32 y)
+{
+    uint32 *count = &s->count;
+    v2 point = {x, y};
+    s->shapes[(*count)++] = point;
+}
+
 typedef struct game_state
 {
     memory_arena arena;
@@ -43,9 +77,7 @@ typedef struct game_state
 
     bool32 paused;
 
-    shape saved_shapes[NUM_SHAPES];
-    uint32 current_saved_shape;
-    uint32 total_shapes;
+    shape_bag shape_bag;
 
     uint64 total_time;
 } game_state;
@@ -172,51 +204,37 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
         // 1. single point
         {
-            uint32 *count = &state->saved_shapes[state->total_shapes].count;
-
-            state->saved_shapes[state->total_shapes].count = 1;
-            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {0, 0};
-
-            ++state->total_shapes;
+            shape *s = add_shape(&state->shape_bag);
+            add_point_to_shape(s, 0, 0);
         }
 
         // 2. Line
         {
-            uint32 *count = &state->saved_shapes[state->total_shapes].count;
-
-            state->saved_shapes[state->total_shapes].count = 1;
-            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {0, -1};
-            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {0, 0};
-            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {0, 1};
-
-            ++state->total_shapes;
+            shape *s = add_shape(&state->shape_bag);
+            add_point_to_shape(s, 0, -1);
+            add_point_to_shape(s, 0, 0);
+            add_point_to_shape(s, 0, 1);
         }
 
         // 3. flower
         {
-            uint32 *count = &state->saved_shapes[state->total_shapes].count;
-
-            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {0, -1};
-            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {-1, 0};
-            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {-1, 1};
-            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {0, 2};
-            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {1, 1};
-            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {1, 0};
-
-            ++state->total_shapes;
+            shape *s = add_shape(&state->shape_bag);
+            add_point_to_shape(s, 0, -1);
+            add_point_to_shape(s, -1, 0);
+            add_point_to_shape(s, -1, 1);
+            add_point_to_shape(s, 0, 2);
+            add_point_to_shape(s, 1, 1);
+            add_point_to_shape(s, 1, 0);
         }
 
         // 4. glider
         {
-            uint32 *count = &state->saved_shapes[state->total_shapes].count;
-
-            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {0, 0};
-            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {1, 1};
-            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {1, 2};
-            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {0, 2};
-            state->saved_shapes[state->total_shapes].shapes[(*count)++] = {-1, 2};
-
-            ++state->total_shapes;
+            shape *s = add_shape(&state->shape_bag);
+            add_point_to_shape(s, 0, 0);
+            add_point_to_shape(s, 1, 1);
+            add_point_to_shape(s, 1, 2);
+            add_point_to_shape(s, 0, 2);
+            add_point_to_shape(s, -1, 2);
         }
 
         state->framecount = 0;
@@ -235,7 +253,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
         if(controller->start.ended_down && controller->start.half_transition_count == 1)
         {
-            ++state->current_saved_shape;
+            advance_shape(&state->shape_bag);
         }
 
         if(controller->action_up.ended_down)
@@ -294,16 +312,16 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     int32 mouse_x = (int32)((input->mouse_x + state->camera_x) / state->cell_width);
     int32 mouse_y = (int32)((input->mouse_y + state->camera_y) / state->cell_height);
 
-    shape current_shape = state->saved_shapes[state->current_saved_shape%state->total_shapes];
+    shape *current_shape = get_current_shape(&state->shape_bag);
 
     if(input->MouseLeft.ended_down)
     {
         for(int i=0;
-            i < current_shape.count;
+            i < current_shape->count;
             ++i)
         {
-            int32 cell_x = constrain(mouse_x + current_shape.shapes[i].x, BOARD_COLS);
-            int32 cell_y = constrain(mouse_y + current_shape.shapes[i].y, BOARD_ROWS);
+            int32 cell_x = constrain(mouse_x + current_shape->shapes[i].x, BOARD_COLS);
+            int32 cell_y = constrain(mouse_y + current_shape->shapes[i].y, BOARD_ROWS);
 
             set_board_value(state->current_generation, state->rows, state->cols,
                             cell_x, cell_y, 1);
@@ -408,11 +426,11 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 
 #else
         for(int i=0;
-            i < current_shape.count;
+            i < current_shape->count;
             ++i)
         {
-            int32 cell_x = constrain(mouse_x + current_shape.shapes[i].x, BOARD_COLS);
-            int32 cell_y = constrain(mouse_y + current_shape.shapes[i].y, BOARD_ROWS);
+            int32 cell_x = constrain(mouse_x + current_shape->shapes[i].x, BOARD_COLS);
+            int32 cell_y = constrain(mouse_y + current_shape->shapes[i].y, BOARD_ROWS);
 
             // NOTE(partkyle): draw mouse position
             draw_rectangle(buffer,
