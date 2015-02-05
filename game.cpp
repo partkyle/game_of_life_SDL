@@ -60,8 +60,8 @@ typedef struct game_state
 {
     memory_arena arena;
 
-    int32 current_generation[BOARD_ROWS*BOARD_COLS];
-    int32 prev_generation[BOARD_ROWS*BOARD_COLS];
+    cell current_generation[BOARD_ROWS*BOARD_COLS];
+    cell prev_generation[BOARD_ROWS*BOARD_COLS];
 
     int32 rows;
     int32 cols;
@@ -323,8 +323,8 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
             int32 cell_x = constrain(mouse_x + current_shape->shapes[i].x, BOARD_COLS);
             int32 cell_y = constrain(mouse_y + current_shape->shapes[i].y, BOARD_ROWS);
 
-            set_board_value(state->current_generation, state->rows, state->cols,
-                            cell_x, cell_y, 1);
+            make_cell_alive(state->current_generation, state->rows, state->cols,
+                            cell_x, cell_y);
 
         }
     }
@@ -360,7 +360,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
              x < MIN(state->cols, (int32)((state->camera_x + buffer->width + state->cell_width) / state->cell_width));
              ++x)
         {
-            int32 cell = get_board_value(state->current_generation, state->rows, state->cols, x, y);
+            const cell *c = get_board_value(state->current_generation, state->rows, state->cols, x, y);
 
             real32 cell_pos_x = x*state->cell_width - state->camera_x;
             real32 cell_pos_y = y*state->cell_height - state->camera_y;
@@ -386,11 +386,11 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 #endif
 
 
-            if(cell)
+            if(c->alive)
             {
-                real32 r = 1.0f - (real32)state->framerate / (real32)MAX_FRAMERATE;
+                real32 b = 1.0f - (real32)c->age / (real32)MAX_FRAMERATE;
                 real32 g = 0.4f;
-                real32 b = (real32)state->framerate / (real32)MAX_FRAMERATE;
+                real32 r = (real32)c->age / (real32)MAX_FRAMERATE;
 
                 // live cells
                 draw_rectangle_alpha(buffer,
