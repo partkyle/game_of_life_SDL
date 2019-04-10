@@ -335,7 +335,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
         {
             state->framecount = 0;
 
-            swap(state->current_generation, state->prev_generation);
+            std::swap(state->current_generation, state->prev_generation);
 
             next_generation(state->current_generation, state->prev_generation, state->rows, state->cols);
         }

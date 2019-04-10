@@ -21,7 +21,7 @@ platform_unload_game_code(game_code *code)
 }
 
 internal platform_dynamic_game
-platform_dynamic_game_load(char *dll_filename)
+platform_dynamic_game_load(const char *dll_filename)
 {
     platform_dynamic_game game = {};
 

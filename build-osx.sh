@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-CC="clang -std=c89"
+CC="c++ -std=c++11"
 
 CFLAGS="-Wno-c++11-compat-deprecated-writable-strings -Ivendor/SDL2-2.0.3/include"
 
@@ -12,7 +12,7 @@ lockfile=build/game.so.lock
 mkdir -p build
 
 touch $lockfile
-  CC game.cpp $CFLAGS $LDFLAGS -g -shared -undefined dynamic_lookup -o build/game.so
+  $CC game.cpp $CFLAGS $LDFLAGS -g -shared -undefined dynamic_lookup -o build/game.so
 rm $lockfile
 
-CC sdl_platform.cpp $CFLAGS $LDFLAGS -g -o build/sdl_platform
+$CC sdl_platform.cpp $CFLAGS $LDFLAGS -g -o build/sdl_platform

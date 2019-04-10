@@ -230,7 +230,7 @@ SDL_resize_texture(sdl_offscreen_buffer *buffer, SDL_Renderer *renderer, int32 w
 }
 
 internal platform_dynamic_game
-SDL_dynamic_platform_game(char *dll_filename)
+SDL_dynamic_platform_game(const char *dll_filename)
 {
       return platform_dynamic_game_load(dll_filename);
 }
@@ -280,7 +280,7 @@ main(int argc, char *arg[])
         game_offscreen_buffer game_buffer = {};
         buffer.game_buffer = &game_buffer;
 
-        char *code_filename = "game";
+        const char *code_filename = "game";
         platform_dynamic_game dynamic_game = SDL_dynamic_platform_game(code_filename);
         game_code code = {};
         SDL_load_game_code(&dynamic_game, &code);
@@ -370,7 +370,7 @@ main(int argc, char *arg[])
 
                 SDL_update_window(window, renderer, &buffer);
 
-                swap(current_input, last_input);
+                std::swap(current_input, last_input);
             }
         }
     }
