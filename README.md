@@ -3,6 +3,8 @@ Game Of Life
 
 An SDL implementation of Conway's game of life
 
+![gol.png][docs/gol.png]
+
 Controls
 ========
 
